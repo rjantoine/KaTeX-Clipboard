@@ -48,7 +48,7 @@ const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}
 E = mc^2`;
 
 export function MathEquationEditor() {
-  const [latex, setLatex] = useState(initialLatex);
+  const [latex, setLatex] = useState(initialLatex.replace(/\n/g, "\\\\\n"));
   const [alignEquals, setAlignEquals] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
@@ -57,7 +57,7 @@ export function MathEquationEditor() {
   const { toast } = useToast();
 
   const processedLatex = useMemo(() => {
-    let processed = latex;
+    let processed = latex.replace(/\\\\\n/g, "\\\\");
     if (alignEquals) {
       processed = `\\begin{aligned}${processed.replace(/=/g, " &=")}\\end{aligned}`;
     }
@@ -78,6 +78,23 @@ export function MathEquationEditor() {
       }
     }
   }, [processedLatex]);
+  
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const newLatex = latex.substring(0, start) + "\\\\\n" + latex.substring(end);
+        setLatex(newLatex);
+        
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 3;
+        }, 0);
+      }
+    }
+  };
 
   const insertSnippet = (snippet: string) => {
     const textarea = textareaRef.current;
@@ -155,6 +172,7 @@ export function MathEquationEditor() {
             <Textarea
               ref={textareaRef}
               value={latex}
+              onKeyDown={handleKeyDown}
               onChange={(e) => setLatex(e.target.value)}
               placeholder="Enter your LaTeX equation here..."
               className="h-48 min-h-[192px] resize-y rounded-lg border-2 border-input bg-background p-4 font-code text-base focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/20"
