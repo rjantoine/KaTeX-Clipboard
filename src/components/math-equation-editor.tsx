@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import * as htmlToImage from "html-to-image";
 import {
   Check,
   ClipboardCopy,
+  FlaskConical,
   ImageIcon,
   Sigma,
 } from "lucide-react";
@@ -23,19 +24,30 @@ type Snippet = {
   tooltip: string;
 };
 
-const snippets: Snippet[] = [
+const mathSnippets: Snippet[] = [
   { label: "$$\\frac{a}{b}$$", value: "\\frac{a}{b}", tooltip: "Fraction" },
+  { label: "$$\\pm$$", value: "\\pm ", tooltip: "Plus-Minus" },
+  { label: "$$\\approx$$", value: "\\approx ", tooltip: "Approximately Equal" },
+  { label: "$$\\geqslant$$", value: "\\geqslant ", tooltip: "Greater Than or Equal To" },
+  { label: "$$\\leqslant$$", value: "\\leqslant ", tooltip: "Less Than or Equal To" },
   { label: "$$\\cdot$$", value: "\\cdot ", tooltip: "Multiplication Dot" },
   { label: "$$\\times$$", value: "\\times ", tooltip: "Multiplication Sign" },
-  { label: "$$x^2$$", value: "x^2", tooltip: "Superscript" },
-  { label: "$$x_i$$", value: "x_i", tooltip: "Subscript" },
+  { label: "$$x^2$$", value: "x^{2}", tooltip: "Superscript" },
+  { label: "$$x_i$$", value: "x_{i}", tooltip: "Subscript" },
   { label: "$$\\sqrt{x}$$", value: "\\sqrt{x}", tooltip: "Square Root" },
   { label: "$$\\rightarrow$$", value: "\\rightarrow ", tooltip: "Right Arrow" },
-  { label: "$$\\rightleftharpoons$$", value: "\\rightleftharpoons ", tooltip: "Equilibrium" },
-  { label: "$$\\xrightarrow{text}$$", value: "\\xrightarrow{text}", tooltip: "Text over arrow" },
-  { label: "$$\\overrightharpoon{text}$$", value: "\\overrightharpoon{text}", tooltip: "Vector/Harpoon over text" },
-  { label: "$$\\ce{H2O}$$", value: "\\ce{H2O}", tooltip: "Chemical Equation" },
 ];
+
+const chemistrySnippets: Snippet[] = [
+  { label: "A ⇌ B", value: "\\ce{A <=> B}", tooltip: "Equilibrium" },
+  { label: "H₂O", value: "\\ce{H2O}", tooltip: "Chemical Formula" },
+  { label: "A → B", value: "\\ce{A -> B}", tooltip: "Reaction Arrow" },
+  { label: "$$\\ce{^{227}_{90}Th+}$$", value: "\\ce{^{227}_{90}Th+}", tooltip: "Isotope" },
+  { label: "$$\\ce{KCr(SO4)2*12H2O}$$", value: "\\ce{KCr(SO4)2*12H2O}", tooltip: "Complex Chemical Formula" },
+  { label: "$$\\ce{A-B=C#D}$$", value: "\\ce{A-B=C#D}", tooltip: "Chemical Bonds" },
+  { label: "$$\\ce{A ->[above][below] B}$$", value: "\\ce{A ->[{text above}][{text below}] B}", tooltip: "Reaction with text" },
+];
+
 
 const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}`;
 
@@ -159,11 +171,12 @@ export function MathEquationEditor() {
     if (placeholderMatch && placeholderMatch[1]) {
       const placeholder = placeholderMatch[1];
       const placeholderIndex = snippet.indexOf(`{${placeholder}}`);
-      selectionStart = start + placeholderIndex + 1;
-      selectionEnd = selectionStart + placeholder.length;
        if (snippet.includes('\\frac')) {
         selectionStart = start + snippet.indexOf('{a}') + 1;
         selectionEnd = selectionStart + 1;
+      } else {
+        selectionStart = start + placeholderIndex + 1;
+        selectionEnd = selectionStart + placeholder.length;
       }
     } else if (snippet.includes('{}')) {
         const placeholderIndex = snippet.indexOf('{}');
@@ -246,26 +259,56 @@ export function MathEquationEditor() {
                 {isClient ? <div ref={previewRef} className="text-2xl" /> : <div className="text-2xl">Loading preview...</div>}
             </div>
           </div>
-          <div>
-            <Label className="text-sm font-medium">Snippets</Label>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {snippets.map((snippet) => (
-                <Tooltip key={snippet.value}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => insertSnippet(snippet.value)}
-                      className="latex-button h-auto py-2"
-                    >
-                      {snippet.label}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{snippet.tooltip}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
+          <div className="space-y-4">
+            <div>
+              <Label className="flex items-center gap-2 text-sm font-medium">
+                <Sigma size={16} />
+                Math Snippets
+              </Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {mathSnippets.map((snippet) => (
+                  <Tooltip key={snippet.value}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => insertSnippet(snippet.value)}
+                        className="latex-button h-auto py-2"
+                      >
+                        {snippet.label}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{snippet.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label className="flex items-center gap-2 text-sm font-medium">
+                <FlaskConical size={16} />
+                Chemistry Snippets
+              </Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {chemistrySnippets.map((snippet) => (
+                  <Tooltip key={snippet.value}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => insertSnippet(snippet.value)}
+                        className="latex-button h-auto py-2"
+                      >
+                        {snippet.label}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{snippet.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </div>
             </div>
           </div>
         </CardContent>
