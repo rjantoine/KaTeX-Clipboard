@@ -36,7 +36,7 @@ const mathSnippets: Snippet[] = [
   { label: "$$x_i$$", value: "x_{i}", tooltip: "Subscript" },
   { label: "$$\\sqrt{x}$$", value: "\\sqrt{x}", tooltip: "Square Root" },
   { label: "$$\\rightarrow$$", value: "\\rightarrow ", tooltip: "Right Arrow" },
-  { label: "$$A \\xrightarrow{text} B$$", value: "\\xrightarrow{text}", tooltip: "Reaction with text above" },
+  { label: "$$\\overrightharpoon{text}$$", value: "\\overrightharpoon{text}", tooltip: "Over Right Harpoon" },
 ];
 
 const chemistrySnippets: Snippet[] = [
@@ -182,6 +182,10 @@ export function MathEquationEditor() {
           selectionStart = start + newSnippet.length;
           selectionEnd = selectionStart;
         }
+      } else {
+        newSnippet = snippet.replace(/{}/, `{${selectedText}}`);
+        selectionStart = start + newSnippet.length;
+        selectionEnd = selectionStart;
       }
     } else {
       const placeholderMatch = snippet.match(/{(.*?)}/);
