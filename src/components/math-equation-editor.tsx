@@ -64,16 +64,13 @@ export function MathEquationEditor() {
         if (window.renderMathInElement) {
             try {
                 window.renderMathInElement(previewRef.current, {
-                    throwOnError: true,
-                    displayMode: true,
-                    output: "html",
-                    trust: true,
                     delimiters: [
                         { left: "$$", right: "$$", display: true },
                         { left: "$", right: "$", display: false },
                         { left: "\\(", right: "\\)", display: false },
                         { left: "\\[", right: "\\]", display: true }
                     ],
+                    throwOnError: false,
                 });
             } catch (error: any) {
                 previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
