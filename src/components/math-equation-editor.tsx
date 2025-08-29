@@ -38,6 +38,12 @@ const mathSnippets: Snippet[] = [
   { label: "$$\\rightarrow$$", value: "\\rightarrow ", tooltip: "Right Arrow" },
   { label: "$$\\overrightharpoon{text}$$", value: "\\overrightharpoon{text}", tooltip: "Over Right Harpoon" },
   { label: "$$\\vec{F}$$", value: "\\vec{F}", tooltip: "Vector F" },
+  { label: "$$\\text{sin}\\ \\theta$$", value: "\\text{sin}\\ \\theta", tooltip: "Sine" },
+  { label: "$$\\text{cos}\\ \\theta$$", value: "\\text{cos}\\ \\theta", tooltip: "Cosine" },
+  { label: "$$\\text{tan}\\ \\theta$$", value: "\\text{tan}\\ \\theta", tooltip: "Tangent" },
+  { label: "$$\\text{sin}^{-1}\\ \\theta$$", value: "\\text{sin}^{-1}\\ \\theta", tooltip: "Inverse Sine" },
+  { label: "$$\\text{cos}^{-1}\\ \\theta$$", value: "\\text{cos}^{-1}\\ \\theta", tooltip: "Inverse Cosine" },
+  { label: "$$\\text{tan}^{-1}\\ \\theta$$", value: "\\text{tan}^{-1}\\ \\theta", tooltip: "Inverse Tangent" },
 ];
 
 const chemistrySnippets: Snippet[] = [
