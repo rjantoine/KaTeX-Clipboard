@@ -25,6 +25,8 @@ type Snippet = {
 
 const snippets: Snippet[] = [
   { label: "$$\\frac{a}{b}$$", value: "\\frac{a}{b}", tooltip: "Fraction" },
+  { label: "$$\\cdot$$", value: "\\cdot ", tooltip: "Multiplication Dot" },
+  { label: "$$\\times$$", value: "\\times ", tooltip: "Multiplication Sign" },
   { label: "$$x^2$$", value: "x^2", tooltip: "Superscript" },
   { label: "$$x_i$$", value: "x_i", tooltip: "Subscript" },
   { label: "$$\\sqrt{x}$$", value: "\\sqrt{x}", tooltip: "Square Root" },
@@ -33,8 +35,6 @@ const snippets: Snippet[] = [
   { label: "$$\\xrightarrow{text}$$", value: "\\xrightarrow{text}", tooltip: "Text over arrow" },
   { label: "$$\\overrightharpoon{text}$$", value: "\\overrightharpoon{text}", tooltip: "Vector/Harpoon over text" },
   { label: "$$\\ce{H2O}$$", value: "\\ce{H2O}", tooltip: "Chemical Equation" },
-  { label: "$$\\cdot$$", value: "\\cdot ", tooltip: "Multiplication Dot" },
-  { label: "$$\\times$$", value: "\\times ", tooltip: "Multiplication Sign" },
 ];
 
 const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}`;
