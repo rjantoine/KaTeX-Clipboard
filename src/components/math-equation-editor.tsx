@@ -30,8 +30,8 @@ const snippets: Snippet[] = [
   { label: "$$\\sqrt{x}$$", value: "\\sqrt{x}", tooltip: "Square Root" },
   { label: "$$\\rightarrow$$", value: "\\rightarrow ", tooltip: "Right Arrow" },
   { label: "$$\\rightleftharpoons$$", value: "\\rightleftharpoons ", tooltip: "Equilibrium" },
-  { label: "$$\\xrightarrow{text}$$", value: "\\xrightarrow{}", tooltip: "Text over arrow" },
-  { label: "$$\\overrightharpoon{text}$$", value: "\\overrightharpoon{}", tooltip: "Vector/Harpoon over text" },
+  { label: "$$\\xrightarrow{text}$$", value: "\\xrightarrow{text}", tooltip: "Text over arrow" },
+  { label: "$$\\overrightharpoon{text}$$", value: "\\overrightharpoon{text}", tooltip: "Vector/Harpoon over text" },
   { label: "$$\\ce{H2O}$$", value: "\\ce{H2O}", tooltip: "Chemical Equation" },
 ];
 
@@ -52,28 +52,35 @@ export function MathEquationEditor() {
   const previewRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    if (previewRef.current && window.renderMathInElement) {
-        const processedLatex = latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
-        previewRef.current.innerHTML = processedLatex;
-        try {
-            window.renderMathInElement(previewRef.current, {
-                delimiters: [
-                    { left: "$$", right: "$$", display: true },
-                    { left: "$", right: "$", display: false },
-                    { left: "\\(", right: "\\)", display: false },
-                    { left: "\\[", right: "\\]", display: true }
-                ],
-                throwOnError: false,
-            });
-        } catch (error: any) {
-            previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
-        }
-    }
-  }, [latex]);
+    setIsClient(true)
+  }, [])
   
   useEffect(() => {
+    if (!isClient) return;
+  
+    if (previewRef.current) {
+        if (window.renderMathInElement) {
+            const processedLatex = latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
+            previewRef.current.innerHTML = processedLatex;
+            try {
+                window.renderMathInElement(previewRef.current, {
+                    delimiters: [
+                        { left: "$$", right: "$$", display: true },
+                        { left: "$", right: "$", display: false },
+                        { left: "\\(", right: "\\)", display: false },
+                        { left: "\\[", right: "\\]", display: true }
+                    ],
+                    throwOnError: false,
+                });
+            } catch (error: any) {
+                previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
+            }
+        }
+    }
+    
     document.querySelectorAll('.latex-button').forEach(elem => {
       if (window.renderMathInElement) {
         window.renderMathInElement(elem as HTMLElement, {
@@ -85,7 +92,7 @@ export function MathEquationEditor() {
         });
       }
     });
-  }, []);
+  }, [latex, isClient]);
 
   const handleToggleAlign = (checked: boolean) => {
     setAlignEquals(checked);
@@ -127,20 +134,34 @@ export function MathEquationEditor() {
   const insertSnippet = (snippet: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-
+  
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = textarea.value;
+    
+    let selectionStart = start + snippet.length;
+    let selectionEnd = selectionStart;
+  
+    const placeholderMatch = snippet.match(/{(.*?)}/);
+    if (placeholderMatch && placeholderMatch[1]) {
+      const placeholder = placeholderMatch[1];
+      const placeholderIndex = snippet.indexOf(placeholder);
+      selectionStart = start + placeholderIndex;
+      selectionEnd = selectionStart + placeholder.length;
+    } else if (snippet.includes('{}')) {
+        const placeholderIndex = snippet.indexOf('{}');
+        selectionStart = start + placeholderIndex + 1;
+        selectionEnd = selectionStart;
+    }
+  
     const newText = text.substring(0, start) + snippet + text.substring(end);
     
     setLatex(newText);
     textarea.focus();
-
-    const cursorPos = snippet.lastIndexOf('{}');
-    const selectionPos = cursorPos !== -1 ? start + cursorPos + 1 : start + snippet.length;
-
+  
     setTimeout(() => {
-      textarea.selectionStart = textarea.selectionEnd = selectionPos;
+      textarea.selectionStart = selectionStart;
+      textarea.selectionEnd = selectionEnd;
     }, 0);
   };
 
@@ -205,7 +226,7 @@ export function MathEquationEditor() {
               className="flex min-h-[192px] flex-col items-center justify-center overflow-auto rounded-lg bg-muted/50 p-4"
               aria-live="polite"
             >
-                <div ref={previewRef} className="text-2xl" />
+                {isClient ? <div ref={previewRef} className="text-2xl" /> : <div className="text-2xl">Loading preview...</div>}
             </div>
           </div>
           <div>
@@ -275,5 +296,3 @@ export function MathEquationEditor() {
     </TooltipProvider>
   );
 }
-
-    
