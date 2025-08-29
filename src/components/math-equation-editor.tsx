@@ -54,11 +54,8 @@ export function MathEquationEditor() {
   const { toast } = useToast();
 
   const processedLatex = useMemo(() => {
-    if (alignEquals) {
-      return `$$${latex}$$`;
-    }
     return latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
-  }, [latex, alignEquals]);
+  }, [latex]);
 
   useEffect(() => {
     if (previewRef.current && window.renderMathInElement) {
@@ -223,7 +220,7 @@ export function MathEquationEditor() {
                       variant="outline"
                       size="sm"
                       onClick={() => insertSnippet(snippet.value)}
-                      className="latex-button"
+                      className="latex-button h-auto py-2"
                     >
                       {snippet.label}
                     </Button>
