@@ -24,15 +24,15 @@ type Snippet = {
 };
 
 const snippets: Snippet[] = [
-  { label: "$$\\frac{a}{b}$$", value: "\\frac{}{}", tooltip: "Fraction" },
-  { label: "$$x^2$$", value: "^{}", tooltip: "Superscript" },
-  { label: "$$x_i$$", value: "_{}", tooltip: "Subscript" },
-  { label: "$$\\sqrt{x}$$", value: "\\sqrt{}", tooltip: "Square Root" },
+  { label: "$$\\frac{a}{b}$$", value: "\\frac{a}{b}", tooltip: "Fraction" },
+  { label: "$$x^2$$", value: "x^2", tooltip: "Superscript" },
+  { label: "$$x_i$$", value: "x_i", tooltip: "Subscript" },
+  { label: "$$\\sqrt{x}$$", value: "\\sqrt{x}", tooltip: "Square Root" },
   { label: "$$\\rightarrow$$", value: "\\rightarrow ", tooltip: "Right Arrow" },
   { label: "$$\\rightleftharpoons$$", value: "\\rightleftharpoons ", tooltip: "Equilibrium" },
-  { label: "$$\\xrightarrow{text}$$", value: "\\xrightarrow{text}", tooltip: "Text over arrow" },
+  { label: "$$\\xrightarrow{text}$$", value: "\\xrightarrow{}", tooltip: "Text over arrow" },
   { label: "$$\\overrightharpoon{text}$$", value: "\\overrightharpoon{}", tooltip: "Vector/Harpoon over text" },
-  { label: "$$\\ce{H2O}$$", value: "\\ce{}", tooltip: "Chemical Equation" },
+  { label: "$$\\ce{H2O}$$", value: "\\ce{H2O}", tooltip: "Chemical Equation" },
 ];
 
 const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}`;
@@ -53,12 +53,9 @@ export function MathEquationEditor() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
-  const processedLatex = useMemo(() => {
-    return latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
-  }, [latex]);
-
   useEffect(() => {
     if (previewRef.current && window.renderMathInElement) {
+        const processedLatex = latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
         previewRef.current.innerHTML = processedLatex;
         try {
             window.renderMathInElement(previewRef.current, {
@@ -74,7 +71,7 @@ export function MathEquationEditor() {
             previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
         }
     }
-  }, [processedLatex]);
+  }, [latex]);
   
   useEffect(() => {
     document.querySelectorAll('.latex-button').forEach(elem => {
@@ -94,8 +91,9 @@ export function MathEquationEditor() {
     setAlignEquals(checked);
     if (checked) {
       const newLatex = `\\begin{aligned}\n${latex
-        .replace(/=/g, " &= ")
-        .replace(/->/g, " &->")}\n\\end{aligned}`;
+        .split('\n')
+        .map(line => line.replace(/=/g, " &= ").replace(/->/g, " &->"))
+        .join('\n')}\n\\end{aligned}`;
       setLatex(newLatex);
     } else {
       const newLatex = latex
@@ -277,3 +275,5 @@ export function MathEquationEditor() {
     </TooltipProvider>
   );
 }
+
+    
