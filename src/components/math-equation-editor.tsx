@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import katex from "katex";
+import "katex/dist/contrib/mhchem.js";
 import * as htmlToImage from "html-to-image";
 import {
   Check,
@@ -41,10 +42,11 @@ const snippets: Snippet[] = [
   { label: "⇌", value: "\\rightleftharpoons ", tooltip: "Equilibrium" },
   { label: "→text", value: "\\xrightarrow{text}", tooltip: "Text over arrow" },
   { label: "⇀text", value: "\\overrightarrow{text}", tooltip: "Vector/Harpoon over text" },
+  { label: "\\ce", value: "\\ce{}", tooltip: "Chemical Equation" },
 ];
 
 const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}
-E = mc^2`;
+\\ce{H2O}`;
 
 export function MathEquationEditor() {
   const [latex, setLatex] = useState(initialLatex.replace(/\n/g, "\\\\\n"));
