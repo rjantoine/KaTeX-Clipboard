@@ -32,11 +32,10 @@ const snippets: Snippet[] = [
   { label: "⇌", value: "\\rightleftharpoons ", tooltip: "Equilibrium" },
   { label: "→text", value: "\\xrightarrow{text}", tooltip: "Text over arrow" },
   { label: "⇀text", value: "\\overrightarrow{text}", tooltip: "Vector/Harpoon over text" },
-  { label: "\\ce", value: "\\ce{}", tooltip: "Chemical Equation" },
+  { label: "\\ce{}", value: "\\ce{}", tooltip: "Chemical Equation" },
 ];
 
-const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}
-\\ce{H2O}`;
+const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O}`;
 
 declare global {
   interface Window {
