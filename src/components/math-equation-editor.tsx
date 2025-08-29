@@ -26,12 +26,12 @@ type Snippet = {
 
 const mathSnippets: Snippet[] = [
   { label: "$$\\frac{a}{b}$$", value: "\\frac{a}{b}", tooltip: "Fraction" },
+  { label: "$$\\cdot$$", value: "\\cdot ", tooltip: "Multiplication Dot" },
+  { label: "$$\\times$$", value: "\\times ", tooltip: "Multiplication Sign" },
   { label: "$$\\pm$$", value: "\\pm ", tooltip: "Plus-Minus" },
   { label: "$$\\approx$$", value: "\\approx ", tooltip: "Approximately Equal" },
   { label: "$$\\geqslant$$", value: "\\geqslant ", tooltip: "Greater Than or Equal To" },
   { label: "$$\\leqslant$$", value: "\\leqslant ", tooltip: "Less Than or Equal To" },
-  { label: "$$\\cdot$$", value: "\\cdot ", tooltip: "Multiplication Dot" },
-  { label: "$$\\times$$", value: "\\times ", tooltip: "Multiplication Sign" },
   { label: "$$x^2$$", value: "x^{2}", tooltip: "Superscript" },
   { label: "$$x_i$$", value: "x_{i}", tooltip: "Subscript" },
   { label: "$$\\sqrt{x}$$", value: "\\sqrt{x}", tooltip: "Square Root" },
@@ -169,22 +169,27 @@ export function MathEquationEditor() {
     let selectionStart = start;
     let selectionEnd = start;
 
-    if (selectedText && snippet.includes('{')) {
-      newSnippet = snippet.replace(/{.*?}/, `{${selectedText}}`);
-      selectionStart = start;
-      selectionEnd = start + newSnippet.length;
+    if (selectedText) {
+      const firstPlaceholderMatch = snippet.match(/{.*?}/);
+      if (firstPlaceholderMatch) {
+        newSnippet = snippet.replace(firstPlaceholderMatch[0], `{${selectedText}}`);
+        const secondPlaceholderMatch = newSnippet.substring(firstPlaceholderMatch.index! + selectedText.length + 2).match(/{.*?}/);
+        if (secondPlaceholderMatch && secondPlaceholderMatch.index !== undefined) {
+          const placeholderContent = secondPlaceholderMatch[0].slice(1,-1);
+          selectionStart = start + newSnippet.indexOf(secondPlaceholderMatch[0]) + 1;
+          selectionEnd = selectionStart + placeholderContent.length;
+        } else {
+          selectionStart = start + newSnippet.length;
+          selectionEnd = selectionStart;
+        }
+      }
     } else {
       const placeholderMatch = snippet.match(/{(.*?)}/);
       if (placeholderMatch) {
         const placeholder = placeholderMatch[1];
         const placeholderIndex = snippet.indexOf(`{${placeholder}}`);
-        if (snippet.includes('\\frac')) {
-          selectionStart = start + snippet.indexOf('{a}') + 1;
-          selectionEnd = selectionStart + 1;
-        } else {
-          selectionStart = start + placeholderIndex + 1;
-          selectionEnd = selectionStart + placeholder.length;
-        }
+        selectionStart = start + placeholderIndex + 1;
+        selectionEnd = selectionStart + placeholder.length;
       } else if (snippet.includes('{}')) {
         const placeholderIndex = snippet.indexOf('{}');
         selectionStart = start + placeholderIndex + 1;
@@ -201,10 +206,8 @@ export function MathEquationEditor() {
     textarea.focus();
 
     setTimeout(() => {
-        if (!selectedText) {
-            textarea.selectionStart = selectionStart;
-            textarea.selectionEnd = selectionEnd;
-        }
+        textarea.selectionStart = selectionStart;
+        textarea.selectionEnd = selectionEnd;
     }, 0);
   };
 
