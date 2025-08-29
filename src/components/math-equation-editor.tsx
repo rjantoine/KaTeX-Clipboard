@@ -9,6 +9,7 @@ import {
   ImageIcon,
   Sigma,
   InfinityIcon,
+  Info,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -309,6 +310,16 @@ export function MathEquationEditor() {
               <Label className="flex items-center gap-2 text-sm font-medium">
                 <Sigma size={16} />
                 Math Snippets
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a href="https://katex.org/docs/supported" target="_blank" rel="noopener noreferrer" className="ml-1">
+                      <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Supported Functions (KaTeX)</p>
+                  </TooltipContent>
+                </Tooltip>
               </Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {mathSnippets.map((snippet) => (
@@ -334,6 +345,16 @@ export function MathEquationEditor() {
               <Label className="flex items-center gap-2 text-sm font-medium">
                 <FlaskConical size={16} />
                 Chemistry Snippets
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a href="https://mhchem.github.io/MathJax-mhchem/" target="_blank" rel="noopener noreferrer" className="ml-1">
+                      <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Supported Chemistry Notation (mhchem)</p>
+                  </TooltipContent>
+                </Tooltip>
               </Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {chemistrySnippets.map((snippet) => (
@@ -359,6 +380,16 @@ export function MathEquationEditor() {
               <Label className="flex items-center gap-2 text-sm font-medium">
                 <InfinityIcon size={16} />
                 Symbol Snippets
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a href="https://katex.org/docs/supported#letters-and-unicode" target="_blank" rel="noopener noreferrer" className="ml-1">
+                      <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Supported Symbols (KaTeX)</p>
+                  </TooltipContent>
+                </Tooltip>
               </Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {symbolSnippets.map((snippet) => (
