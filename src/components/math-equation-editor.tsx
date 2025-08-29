@@ -8,7 +8,6 @@ import {
   ClipboardCopy,
   Download,
   ImageIcon,
-  Pilcrow,
   Sigma,
   ChevronDown,
 } from "lucide-react";
@@ -58,12 +57,8 @@ export function MathEquationEditor() {
   const { toast } = useToast();
 
   const processedLatex = useMemo(() => {
-    let processed = latex.replace(/\\\\\n/g, "\\\\");
-    if (alignEquals) {
-      processed = `\\begin{aligned}${processed.replace(/=/g, " &=")}\\end{aligned}`;
-    }
-    return processed;
-  }, [latex, alignEquals]);
+    return latex.replace(/\\\\\n/g, "\\\\");
+  }, [latex]);
 
   useEffect(() => {
     if (previewRef.current) {
@@ -79,6 +74,21 @@ export function MathEquationEditor() {
       }
     }
   }, [processedLatex]);
+
+  const handleToggleAlign = (checked: boolean) => {
+    setAlignEquals(checked);
+    if (checked) {
+      let alignedLatex = latex.replace(/=/g, " &=");
+      if (!alignedLatex.includes("\\begin{aligned}")) {
+          alignedLatex = `\\begin{aligned}\n${alignedLatex}\n\\end{aligned}`;
+      }
+      setLatex(alignedLatex);
+    } else {
+      let unalignedLatex = latex.replace(/ &=(?!=)/g, "=");
+      unalignedLatex = unalignedLatex.replace(/\\begin{aligned}\n?/, "").replace(/\n?\\end{aligned}/, "");
+      setLatex(unalignedLatex);
+    }
+  };
   
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter') {
@@ -214,13 +224,12 @@ export function MathEquationEditor() {
             <Checkbox
               id="align-equals"
               checked={alignEquals}
-              onCheckedChange={(checked) => setAlignEquals(checked as boolean)}
+              onCheckedChange={(checked) => handleToggleAlign(checked as boolean)}
             />
             <Label
               htmlFor="align-equals"
               className="flex cursor-pointer items-center gap-2 font-medium"
             >
-              <Pilcrow className="h-4 w-4" />
               <span>Align '=' signs</span>
             </Label>
           </div>
