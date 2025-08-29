@@ -84,6 +84,7 @@ export function MathEquationEditor() {
     if (checked) {
       const newLatex = `\\begin{aligned}\n${latex
         .replace(/=/g, " &= ")
+        .replace(/\\rightarrow/g, " &\\rightarrow")
         .replace(/\n/g, " \\\\\n")}\n\\end{aligned}`;
       setLatex(newLatex);
     } else {
@@ -91,6 +92,7 @@ export function MathEquationEditor() {
         .replace(/\\begin{aligned}\n?/, "")
         .replace(/\n?\\end{aligned}/, "")
         .replace(/ &= /g, "=")
+        .replace(/ &\\rightarrow/g, "\\rightarrow")
         .replace(/ \\\\\n/g, "\n");
       setLatex(newLatex);
     }
@@ -233,7 +235,7 @@ export function MathEquationEditor() {
               htmlFor="align-equals"
               className="cursor-pointer font-medium"
             >
-              Align '=' signs
+              Align '=' signs and ->
             </Label>
           </div>
 
