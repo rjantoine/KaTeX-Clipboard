@@ -44,7 +44,7 @@ declare global {
 }
 
 export function MathEquationEditor() {
-  const [latex, setLatex] = useState(initialLatex.replace(/\n/g, "\\\\\n"));
+  const [latex, setLatex] = useState(initialLatex);
   const [alignEquals, setAlignEquals] = useState(false);
   const [isCopyingImage, setIsCopyingImage] = useState(false);
   const [justCopiedImage, setJustCopiedImage] = useState(false);
@@ -54,12 +54,15 @@ export function MathEquationEditor() {
   const { toast } = useToast();
 
   const processedLatex = useMemo(() => {
-    return latex.replace(/\\\\\n/g, "\\\\");
-  }, [latex]);
+    if (alignEquals) {
+      return `$$ \\begin{aligned} ${latex.replace(/=/g, " &=").replace(/\n/g, "\\\\ ")} \\end{aligned} $$`;
+    }
+    return latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
+  }, [latex, alignEquals]);
 
   useEffect(() => {
     if (previewRef.current) {
-        previewRef.current.textContent = `$$${processedLatex}$$`;
+        previewRef.current.innerHTML = processedLatex;
         if (window.renderMathInElement) {
             try {
                 window.renderMathInElement(previewRef.current, {
@@ -80,34 +83,10 @@ export function MathEquationEditor() {
 
   const handleToggleAlign = (checked: boolean) => {
     setAlignEquals(checked);
-    if (checked) {
-      let alignedLatex = latex.replace(/=/g, " &=");
-      if (!alignedLatex.includes("\\begin{aligned}")) {
-          alignedLatex = `\\begin{aligned}\n${alignedLatex}\n\\end{aligned}`;
-      }
-      setLatex(alignedLatex);
-    } else {
-      let unalignedLatex = latex.replace(/ &=(?!=)/g, "=");
-      unalignedLatex = unalignedLatex.replace(/\\begin{aligned}\n?/, "").replace(/\n?\\end{aligned}/, "");
-      setLatex(unalignedLatex);
-    }
   };
   
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      const textarea = textareaRef.current;
-      if (textarea) {
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const newLatex = latex.substring(0, start) + "\\\\\n" + latex.substring(end);
-        setLatex(newLatex);
-        
-        setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = start + 3;
-        }, 0);
-      }
-    }
+    // Default textarea behavior for Enter is sufficient now
   };
 
   const insertSnippet = (snippet: string) => {
@@ -135,12 +114,7 @@ export function MathEquationEditor() {
     setIsCopyingImage(true);
 
     try {
-      const katexElement = previewRef.current.querySelector('.katex');
-      if (!katexElement) {
-        throw new Error("Rendered KaTeX element not found. Please enter a valid equation.");
-      }
-      
-      const dataUrl = await htmlToImage.toPng(katexElement as HTMLElement, {
+      const dataUrl = await htmlToImage.toPng(previewRef.current, {
         pixelRatio: 4,
         backgroundColor: 'transparent',
       });
@@ -167,7 +141,7 @@ export function MathEquationEditor() {
   };
   
   const copyLatexToClipboard = () => {
-    navigator.clipboard.writeText(processedLatex);
+    navigator.clipboard.writeText(latex);
     setJustCopiedLatex(true);
     setTimeout(() => setJustCopiedLatex(false), 2000);
   };
@@ -193,7 +167,7 @@ export function MathEquationEditor() {
               aria-label="LaTeX Equation Input"
             />
             <div
-              className="flex min-h-[192px] items-center justify-center overflow-auto rounded-lg bg-muted/50 p-4"
+              className="flex min-h-[192px] flex-col items-center justify-center overflow-auto rounded-lg bg-muted/50 p-4"
               aria-live="polite"
             >
                 <div ref={previewRef} className="text-2xl" />
