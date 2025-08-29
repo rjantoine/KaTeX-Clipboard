@@ -145,8 +145,8 @@ export function MathEquationEditor() {
     const placeholderMatch = snippet.match(/{(.*?)}/);
     if (placeholderMatch && placeholderMatch[1]) {
       const placeholder = placeholderMatch[1];
-      const placeholderIndex = snippet.indexOf(placeholder);
-      selectionStart = start + placeholderIndex;
+      const placeholderIndex = snippet.indexOf(`{${placeholder}}`);
+      selectionStart = start + placeholderIndex + 1;
       selectionEnd = selectionStart + placeholder.length;
     } else if (snippet.includes('{}')) {
         const placeholderIndex = snippet.indexOf('{}');
