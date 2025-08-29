@@ -62,9 +62,6 @@ export function MathEquationEditor() {
           displayMode: true,
           output: "html",
           trust: true,
-          macros: {
-            "\\ce": "\\ce",
-          }
         });
       } catch (error: any) {
         previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
