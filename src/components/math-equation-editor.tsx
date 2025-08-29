@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import katex from "katex";
-import "katex/dist/contrib/mhchem.js";
 import * as htmlToImage from "html-to-image";
 import {
   Check,
@@ -40,6 +38,12 @@ const snippets: Snippet[] = [
 const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}
 \\ce{H2O}`;
 
+declare global {
+  interface Window {
+    renderMathInElement: (element: HTMLElement, options: any) => void;
+  }
+}
+
 export function MathEquationEditor() {
   const [latex, setLatex] = useState(initialLatex.replace(/\n/g, "\\\\\n"));
   const [alignEquals, setAlignEquals] = useState(false);
@@ -55,13 +59,20 @@ export function MathEquationEditor() {
   }, [latex]);
 
   useEffect(() => {
-    if (previewRef.current) {
+    if (previewRef.current && window.renderMathInElement) {
+      previewRef.current.textContent = processedLatex;
       try {
-        katex.render(processedLatex, previewRef.current, {
+        window.renderMathInElement(previewRef.current, {
           throwOnError: true,
           displayMode: true,
           output: "html",
           trust: true,
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false },
+            { left: "\\(", right: "\\)", display: false },
+            { left: "\\[", right: "\\]", display: true }
+          ],
         });
       } catch (error: any) {
         previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
