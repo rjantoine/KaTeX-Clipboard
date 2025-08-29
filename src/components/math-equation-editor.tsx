@@ -36,6 +36,7 @@ const mathSnippets: Snippet[] = [
   { label: "$$x_i$$", value: "x_{i}", tooltip: "Subscript" },
   { label: "$$\\sqrt{x}$$", value: "\\sqrt{x}", tooltip: "Square Root" },
   { label: "$$\\rightarrow$$", value: "\\rightarrow ", tooltip: "Right Arrow" },
+  { label: "$$A \\xrightarrow{text} B$$", value: "\\xrightarrow{text}", tooltip: "Reaction with text above" },
 ];
 
 const chemistrySnippets: Snippet[] = [
@@ -47,7 +48,6 @@ const chemistrySnippets: Snippet[] = [
   { label: "$$\\ce{A-B=C#D}$$", value: "\\ce{A-B=C#D}", tooltip: "Chemical Bonds" },
   { label: "$$\\ce{A ->[above][below] B}$$", value: "\\ce{A ->[{text above}][{text below}] B}", tooltip: "Reaction with text" },
 ];
-
 
 const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}`;
 
@@ -159,39 +159,52 @@ export function MathEquationEditor() {
   const insertSnippet = (snippet: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-  
+
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = textarea.value;
-    
-    let selectionStart = start + snippet.length;
-    let selectionEnd = selectionStart;
-  
-    const placeholderMatch = snippet.match(/{(.*?)}/);
-    if (placeholderMatch && placeholderMatch[1]) {
-      const placeholder = placeholderMatch[1];
-      const placeholderIndex = snippet.indexOf(`{${placeholder}}`);
-       if (snippet.includes('\\frac')) {
-        selectionStart = start + snippet.indexOf('{a}') + 1;
-        selectionEnd = selectionStart + 1;
-      } else {
-        selectionStart = start + placeholderIndex + 1;
-        selectionEnd = selectionStart + placeholder.length;
-      }
-    } else if (snippet.includes('{}')) {
+    const selectedText = text.substring(start, end);
+
+    let newSnippet = snippet;
+    let selectionStart = start;
+    let selectionEnd = start;
+
+    if (selectedText && snippet.includes('{')) {
+      newSnippet = snippet.replace(/{.*?}/, `{${selectedText}}`);
+      selectionStart = start;
+      selectionEnd = start + newSnippet.length;
+    } else {
+      const placeholderMatch = snippet.match(/{(.*?)}/);
+      if (placeholderMatch) {
+        const placeholder = placeholderMatch[1];
+        const placeholderIndex = snippet.indexOf(`{${placeholder}}`);
+        if (snippet.includes('\\frac')) {
+          selectionStart = start + snippet.indexOf('{a}') + 1;
+          selectionEnd = selectionStart + 1;
+        } else {
+          selectionStart = start + placeholderIndex + 1;
+          selectionEnd = selectionStart + placeholder.length;
+        }
+      } else if (snippet.includes('{}')) {
         const placeholderIndex = snippet.indexOf('{}');
         selectionStart = start + placeholderIndex + 1;
         selectionEnd = selectionStart;
+      } else {
+        selectionStart = start + snippet.length;
+        selectionEnd = selectionStart;
+      }
     }
-  
-    const newText = text.substring(0, start) + snippet + text.substring(end);
+    
+    const newText = text.substring(0, start) + newSnippet + text.substring(end);
     
     setLatex(newText);
     textarea.focus();
-  
+
     setTimeout(() => {
-      textarea.selectionStart = selectionStart;
-      textarea.selectionEnd = selectionEnd;
+        if (!selectedText) {
+            textarea.selectionStart = selectionStart;
+            textarea.selectionEnd = selectionEnd;
+        }
     }, 0);
   };
 
