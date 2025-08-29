@@ -8,6 +8,7 @@ import {
   FlaskConical,
   ImageIcon,
   Sigma,
+  InfinityIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,23 @@ const chemistrySnippets: Snippet[] = [
   { label: "$$\\ce{KCr(SO4)2*12H2O}$$", value: "\\ce{KCr(SO4)2*12H2O}", tooltip: "Complex Chemical Formula" },
   { label: "$$\\ce{A-B=C#D}$$", value: "\\ce{A-B=C#D}", tooltip: "Chemical Bonds" },
   { label: "$$\\ce{A ->[above][below] B}$$", value: "\\ce{A ->[{text above}][{text below}] B}", tooltip: "Reaction with text" },
+];
+
+const symbolSnippets: Snippet[] = [
+  { label: "$$\\pi$$", value: "\\pi ", tooltip: "Pi" },
+  { label: "$$\\infty$$", value: "\\infty ", tooltip: "Infinity" },
+  { label: "$$\\alpha$$", value: "\\alpha ", tooltip: "Alpha" },
+  { label: "$$\\beta$$", value: "\\beta ", tooltip: "Beta" },
+  { label: "$$\\gamma$$", value: "\\gamma ", tooltip: "Gamma" },
+  { label: "$$\\delta$$", value: "\\delta ", tooltip: "Delta" },
+  { label: "$$\\epsilon$$", value: "\\epsilon ", tooltip: "Epsilon" },
+  { label: "$$\\theta$$", value: "\\theta ", tooltip: "Theta" },
+  { label: "$$\\lambda$$", value: "\\lambda ", tooltip: "Lambda" },
+  { label: "$$\\mu$$", value: "\\mu ", tooltip: "Mu" },
+  { label: "$$\\sigma$$", value: "\\sigma ", tooltip: "Sigma" },
+  { label: "$$\\omega$$", value: "\\omega ", tooltip: "Omega" },
+  { label: "$$\\Delta$$", value: "\\Delta ", tooltip: "Delta (uppercase)" },
+  { label: "$$\\Omega$$", value: "\\Omega ", tooltip: "Omega (uppercase)" },
 ];
 
 const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}`;
@@ -319,6 +337,31 @@ export function MathEquationEditor() {
               </Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {chemistrySnippets.map((snippet) => (
+                  <Tooltip key={snippet.value}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => insertSnippet(snippet.value)}
+                        className="latex-button h-auto py-2"
+                      >
+                        {snippet.label}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{snippet.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label className="flex items-center gap-2 text-sm font-medium">
+                <InfinityIcon size={16} />
+                Symbol Snippets
+              </Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {symbolSnippets.map((snippet) => (
                   <Tooltip key={snippet.value}>
                     <TooltipTrigger asChild>
                       <Button
