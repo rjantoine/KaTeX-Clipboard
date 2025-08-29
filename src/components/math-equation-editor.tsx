@@ -55,7 +55,7 @@ export function MathEquationEditor() {
 
   const processedLatex = useMemo(() => {
     if (alignEquals) {
-      return `$$ \\begin{aligned} ${latex.replace(/=/g, " &=").replace(/\n/g, "\\\\ ")} \\end{aligned} $$`;
+      return `$$ ${latex} $$`;
     }
     return latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
   }, [latex, alignEquals]);
@@ -83,6 +83,19 @@ export function MathEquationEditor() {
 
   const handleToggleAlign = (checked: boolean) => {
     setAlignEquals(checked);
+    if (checked) {
+      const newLatex = `\\begin{aligned}\n${latex
+        .replace(/=/g, " &= ")
+        .replace(/\n/g, " \\\\\n")}\n\\end{aligned}`;
+      setLatex(newLatex);
+    } else {
+      const newLatex = latex
+        .replace(/\\begin{aligned}\n?/, "")
+        .replace(/\n?\\end{aligned}/, "")
+        .replace(/ &= /g, "=")
+        .replace(/ \\\\\n/g, "\n");
+      setLatex(newLatex);
+    }
   };
   
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
