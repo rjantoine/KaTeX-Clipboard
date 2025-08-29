@@ -50,8 +50,9 @@ E = mc^2`;
 export function MathEquationEditor() {
   const [latex, setLatex] = useState(initialLatex.replace(/\n/g, "\\\\\n"));
   const [alignEquals, setAlignEquals] = useState(false);
-  const [isCopying, setIsCopying] = useState(false);
-  const [justCopied, setJustCopied] = useState(false);
+  const [isCopyingImage, setIsCopyingImage] = useState(false);
+  const [justCopiedImage, setJustCopiedImage] = useState(false);
+  const [justCopiedLatex, setJustCopiedLatex] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
@@ -116,9 +117,9 @@ export function MathEquationEditor() {
     }, 0);
   };
 
-  const copyImageToClipboard = async (format: "png" | "svg") => {
-    if (!previewRef.current || isCopying || justCopied) return;
-    setIsCopying(true);
+  const copyImageToClipboard = async () => {
+    if (!previewRef.current || isCopyingImage || justCopiedImage) return;
+    setIsCopyingImage(true);
 
     try {
       const katexElement = previewRef.current.querySelector('.katex');
@@ -126,8 +127,7 @@ export function MathEquationEditor() {
         throw new Error("Rendered KaTeX element not found. Please enter a valid equation.");
       }
       
-      const toImageFn = format === 'png' ? htmlToImage.toPng : htmlToImage.toSvg;
-      const dataUrl = await toImageFn(katexElement as HTMLElement, {
+      const dataUrl = await htmlToImage.toPng(katexElement as HTMLElement, {
         pixelRatio: 4,
         backgroundColor: 'transparent',
       });
@@ -138,8 +138,8 @@ export function MathEquationEditor() {
         new ClipboardItem({ [blob.type]: blob }),
       ]);
       
-      setJustCopied(true);
-      setTimeout(() => setJustCopied(false), 2000);
+      setJustCopiedImage(true);
+      setTimeout(() => setJustCopiedImage(false), 2000);
 
     } catch (error: any) {
       console.error("Failed to copy image:", error);
@@ -149,13 +149,14 @@ export function MathEquationEditor() {
         description: error.message || "Could not copy the equation as an image.",
       });
     } finally {
-      setIsCopying(false);
+      setIsCopyingImage(false);
     }
   };
   
   const copyLatexToClipboard = () => {
     navigator.clipboard.writeText(processedLatex);
-    // As per instruction, no success toast. A subtle feedback can be added if needed.
+    setJustCopiedLatex(true);
+    setTimeout(() => setJustCopiedLatex(false), 2000);
   };
 
   return (
@@ -228,35 +229,25 @@ export function MathEquationEditor() {
             <Button
               variant="secondary"
               onClick={copyLatexToClipboard}
+              disabled={justCopiedLatex}
             >
-              <ClipboardCopy className="mr-2 h-4 w-4" />
-              Copy LaTeX
+              {justCopiedLatex ? (
+                <Check className="mr-2 h-4 w-4" />
+              ) : (
+                <ClipboardCopy className="mr-2 h-4 w-4" />
+              )}
+              {justCopiedLatex ? "Copied!" : "Copy LaTeX"}
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button disabled={isCopying || justCopied}>
-                  {isCopying ? (
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
-                  ) : justCopied ? (
-                    <Check className="mr-2 h-4 w-4" />
-                  ) : (
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                  )}
-                  {isCopying ? "Copying..." : justCopied ? "Copied!" : "Copy as Image"}
-                  {!isCopying && <ChevronDown className="ml-2 h-4 w-4" />}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => copyImageToClipboard("png")}>
-                  <Download className="mr-2 h-4 w-4" />
-                  <span>Copy as PNG</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => copyImageToClipboard("svg")}>
-                  <Download className="mr-2 h-4 w-4" />
-                  <span>Copy as SVG</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button onClick={copyImageToClipboard} disabled={isCopyingImage || justCopiedImage}>
+              {isCopyingImage ? (
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
+              ) : justCopiedImage ? (
+                <Check className="mr-2 h-4 w-4" />
+              ) : (
+                <ImageIcon className="mr-2 h-4 w-4" />
+              )}
+              {isCopyingImage ? "Copying..." : justCopiedImage ? "Copied!" : "Copy as PNG"}
+            </Button>
           </div>
         </CardFooter>
       </Card>
