@@ -59,24 +59,26 @@ export function MathEquationEditor() {
   }, [latex]);
 
   useEffect(() => {
-    if (previewRef.current && window.renderMathInElement) {
-      previewRef.current.textContent = processedLatex;
-      try {
-        window.renderMathInElement(previewRef.current, {
-          throwOnError: true,
-          displayMode: true,
-          output: "html",
-          trust: true,
-          delimiters: [
-            { left: "$$", right: "$$", display: true },
-            { left: "$", right: "$", display: false },
-            { left: "\\(", right: "\\)", display: false },
-            { left: "\\[", right: "\\]", display: true }
-          ],
-        });
-      } catch (error: any) {
-        previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
-      }
+    if (previewRef.current) {
+        previewRef.current.textContent = `$$${processedLatex}$$`;
+        if (window.renderMathInElement) {
+            try {
+                window.renderMathInElement(previewRef.current, {
+                    throwOnError: true,
+                    displayMode: true,
+                    output: "html",
+                    trust: true,
+                    delimiters: [
+                        { left: "$$", right: "$$", display: true },
+                        { left: "$", right: "$", display: false },
+                        { left: "\\(", right: "\\)", display: false },
+                        { left: "\\[", right: "\\]", display: true }
+                    ],
+                });
+            } catch (error: any) {
+                previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
+            }
+        }
     }
   }, [processedLatex]);
 
