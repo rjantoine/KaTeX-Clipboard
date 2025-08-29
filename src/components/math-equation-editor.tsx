@@ -7,10 +7,8 @@ import * as htmlToImage from "html-to-image";
 import {
   Check,
   ClipboardCopy,
-  Download,
   ImageIcon,
   Sigma,
-  ChevronDown,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,12 +18,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 type Snippet = {
   label: string;
@@ -70,6 +62,9 @@ export function MathEquationEditor() {
           displayMode: true,
           output: "html",
           trust: true,
+          macros: {
+            "\\ce": "\\ce",
+          }
         });
       } catch (error: any) {
         previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
@@ -230,9 +225,9 @@ export function MathEquationEditor() {
             />
             <Label
               htmlFor="align-equals"
-              className="flex cursor-pointer items-center gap-2 font-medium"
+              className="cursor-pointer font-medium"
             >
-              <span>Align '=' signs</span>
+              Align '=' signs
             </Label>
           </div>
 
