@@ -33,6 +33,8 @@ const snippets: Snippet[] = [
   { label: "$$\\xrightarrow{text}$$", value: "\\xrightarrow{text}", tooltip: "Text over arrow" },
   { label: "$$\\overrightharpoon{text}$$", value: "\\overrightharpoon{text}", tooltip: "Vector/Harpoon over text" },
   { label: "$$\\ce{H2O}$$", value: "\\ce{H2O}", tooltip: "Chemical Equation" },
+  { label: "$$\\cdot$$", value: "\\cdot ", tooltip: "Multiplication Dot" },
+  { label: "$$\\times$$", value: "\\times ", tooltip: "Multiplication Sign" },
 ];
 
 const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}`;
@@ -146,8 +148,12 @@ export function MathEquationEditor() {
     if (placeholderMatch && placeholderMatch[1]) {
       const placeholder = placeholderMatch[1];
       const placeholderIndex = snippet.indexOf(`{${placeholder}}`);
-      selectionStart = start + placeholderIndex + 1;
+      selectionStart = start + placeholderIndex;
       selectionEnd = selectionStart + placeholder.length;
+       if (snippet.includes('\\frac')) {
+        selectionStart = start + snippet.indexOf('{a}');
+        selectionEnd = selectionStart + 1;
+      }
     } else if (snippet.includes('{}')) {
         const placeholderIndex = snippet.indexOf('{}');
         selectionStart = start + placeholderIndex + 1;
