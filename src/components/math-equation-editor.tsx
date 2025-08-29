@@ -123,6 +123,17 @@ export function MathEquationEditor() {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       const text = textarea.value;
+
+      const textBeforeCursor = text.substring(0, start);
+      if (textBeforeCursor.endsWith('\\\\')) {
+        const newText = text.substring(0, start) + '\n' + text.substring(end);
+        setLatex(newText);
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1;
+        }, 0);
+        return;
+      }
+      
       const newText = text.substring(0, start) + ' \\\\\n' + text.substring(end);
       
       setLatex(newText);
@@ -148,10 +159,10 @@ export function MathEquationEditor() {
     if (placeholderMatch && placeholderMatch[1]) {
       const placeholder = placeholderMatch[1];
       const placeholderIndex = snippet.indexOf(`{${placeholder}}`);
-      selectionStart = start + placeholderIndex;
+      selectionStart = start + placeholderIndex + 1;
       selectionEnd = selectionStart + placeholder.length;
        if (snippet.includes('\\frac')) {
-        selectionStart = start + snippet.indexOf('{a}');
+        selectionStart = start + snippet.indexOf('{a}') + 1;
         selectionEnd = selectionStart + 1;
       }
     } else if (snippet.includes('{}')) {
