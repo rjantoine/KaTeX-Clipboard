@@ -37,6 +37,7 @@ const mathSnippets: Snippet[] = [
   { label: "$$\\sqrt{x}$$", value: "\\sqrt{x}", tooltip: "Square Root" },
   { label: "$$\\rightarrow$$", value: "\\rightarrow ", tooltip: "Right Arrow" },
   { label: "$$\\overrightharpoon{text}$$", value: "\\overrightharpoon{text}", tooltip: "Over Right Harpoon" },
+  { label: "$$\\vec{F}$$", value: "\\vec{F}", tooltip: "Vector F" },
 ];
 
 const chemistrySnippets: Snippet[] = [
@@ -113,7 +114,7 @@ export function MathEquationEditor() {
     if (checked) {
       const newLatex = `\\begin{aligned}\n${latex
         .split('\n')
-        .map(line => line.replace(/=/g, " &= ").replace(/->/g, " &->"))
+        .map(line => line.replace(/=/g, " &= ").replace(/ ->/g, " &->"))
         .join('\n')}\n\\end{aligned}`;
       setLatex(newLatex);
     } else {
