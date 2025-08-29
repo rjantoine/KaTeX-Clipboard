@@ -24,18 +24,18 @@ type Snippet = {
 };
 
 const snippets: Snippet[] = [
-  { label: "a/b", value: "\\frac{}{}", tooltip: "Fraction" },
-  { label: "x²", value: "^{}", tooltip: "Superscript" },
-  { label: "xᵢ", value: "_{}", tooltip: "Subscript" },
-  { label: "√", value: "\\sqrt{}", tooltip: "Square Root" },
-  { label: "→", value: "\\rightarrow ", tooltip: "Right Arrow" },
-  { label: "⇌", value: "\\rightleftharpoons ", tooltip: "Equilibrium" },
-  { label: "→text", value: "\\xrightarrow{text}", tooltip: "Text over arrow" },
-  { label: "⇀text", value: "\\overrightarrow{text}", tooltip: "Vector/Harpoon over text" },
-  { label: "\\ce{}", value: "\\ce{}", tooltip: "Chemical Equation" },
+  { label: "$$\\frac{a}{b}$$", value: "\\frac{}{}", tooltip: "Fraction" },
+  { label: "$$x^2$$", value: "^{}", tooltip: "Superscript" },
+  { label: "$$x_i$$", value: "_{}", tooltip: "Subscript" },
+  { label: "$$\\sqrt{x}$$", value: "\\sqrt{}", tooltip: "Square Root" },
+  { label: "$$\\rightarrow$$", value: "\\rightarrow ", tooltip: "Right Arrow" },
+  { label: "$$\\rightleftharpoons$$", value: "\\rightleftharpoons ", tooltip: "Equilibrium" },
+  { label: "$$\\xrightarrow{text}$$", value: "\\xrightarrow{text}", tooltip: "Text over arrow" },
+  { label: "$$\\overrightharpoon{text}$$", value: "\\overrightharpoon{}", tooltip: "Vector/Harpoon over text" },
+  { label: "$$\\ce{H2O}$$", value: "\\ce{}", tooltip: "Chemical Equation" },
 ];
 
-const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O}`;
+const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}`;
 
 declare global {
   interface Window {
@@ -78,6 +78,20 @@ export function MathEquationEditor() {
         }
     }
   }, [processedLatex]);
+  
+  useEffect(() => {
+    document.querySelectorAll('.latex-button').forEach(elem => {
+      if (window.renderMathInElement) {
+        window.renderMathInElement(elem as HTMLElement, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false },
+          ],
+          throwOnError: false,
+        });
+      }
+    });
+  }, []);
 
   const handleToggleAlign = (checked: boolean) => {
     setAlignEquals(checked);
@@ -209,7 +223,7 @@ export function MathEquationEditor() {
                       variant="outline"
                       size="sm"
                       onClick={() => insertSnippet(snippet.value)}
-                      className="font-code"
+                      className="latex-button"
                     >
                       {snippet.label}
                     </Button>
