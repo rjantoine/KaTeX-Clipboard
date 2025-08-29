@@ -61,22 +61,20 @@ export function MathEquationEditor() {
   }, [latex, alignEquals]);
 
   useEffect(() => {
-    if (previewRef.current) {
+    if (previewRef.current && window.renderMathInElement) {
         previewRef.current.innerHTML = processedLatex;
-        if (window.renderMathInElement) {
-            try {
-                window.renderMathInElement(previewRef.current, {
-                    delimiters: [
-                        { left: "$$", right: "$$", display: true },
-                        { left: "$", right: "$", display: false },
-                        { left: "\\(", right: "\\)", display: false },
-                        { left: "\\[", right: "\\]", display: true }
-                    ],
-                    throwOnError: false,
-                });
-            } catch (error: any) {
-                previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
-            }
+        try {
+            window.renderMathInElement(previewRef.current, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false },
+                    { left: "\\(", right: "\\)", display: false },
+                    { left: "\\[", right: "\\]", display: true }
+                ],
+                throwOnError: false,
+            });
+        } catch (error: any) {
+            previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
         }
     }
   }, [processedLatex]);
@@ -99,7 +97,22 @@ export function MathEquationEditor() {
   };
   
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Default textarea behavior for Enter is sufficient now
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const newText = text.substring(0, start) + ' \\\\\n' + text.substring(end);
+      
+      setLatex(newText);
+
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 4;
+      }, 0);
+    }
   };
 
   const insertSnippet = (snippet: string) => {
