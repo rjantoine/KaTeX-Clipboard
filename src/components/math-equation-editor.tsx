@@ -55,7 +55,7 @@ export function MathEquationEditor() {
 
   const processedLatex = useMemo(() => {
     if (alignEquals) {
-      return `$$ ${latex} $$`;
+      return `$$${latex}$$`;
     }
     return latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
   }, [latex, alignEquals]);
@@ -84,16 +84,14 @@ export function MathEquationEditor() {
     if (checked) {
       const newLatex = `\\begin{aligned}\n${latex
         .replace(/=/g, " &= ")
-        .replace(/->/g, " &->")
-        .replace(/\n/g, " \\\\\n")}\n\\end{aligned}`;
+        .replace(/->/g, " &->")}\n\\end{aligned}`;
       setLatex(newLatex);
     } else {
       const newLatex = latex
         .replace(/\\begin{aligned}\n?/, "")
         .replace(/\n?\\end{aligned}/, "")
         .replace(/ &= /g, "=")
-        .replace(/ &->/g, "->")
-        .replace(/ \\\\\n/g, "\n");
+        .replace(/ &->/g, "->");
       setLatex(newLatex);
     }
   };
