@@ -139,20 +139,10 @@ export function MathEquationEditor() {
                               }
                           }, 0);
                           
-                          const span = document.createElement('span');
-                          span.id = id;
-                          
-                          // This is a bit of a hack to get KaTeX to render raw HTML
-                          const htmlNode = new window.katex.CustomNode(span, {
-                            type: "html",
-                            body: span.outerHTML,
-                            attributes: {id: id}
-                          });
-                          
                           return {
                             type: "html",
-                            html: span.outerHTML,
-                            htmlNode: htmlNode
+                            mode: context.mode,
+                            html: `<span id="${id}"></span>`,
                           };
                       }
                     },
@@ -280,9 +270,9 @@ export function MathEquationEditor() {
                 const newText =
                 text.substring(0, openPos) +
                 '\\left' +
-                text.substring(openPos, start-1) +
+                text.substring(openPos, start - 1) +
                 '\\right' +
-                text.substring(start-1);
+                text.substring(start - 1);
                 
                 setLatex(newText);
                 setTimeout(() => {
@@ -600,3 +590,5 @@ export function MathEquationEditor() {
     </TooltipProvider>
   );
 }
+
+    
