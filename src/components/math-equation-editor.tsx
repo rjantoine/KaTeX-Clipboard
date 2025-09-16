@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import type { SmilesDrawer } from "smiles-drawer";
 
 type Snippet = {
   label: string;
@@ -75,11 +76,12 @@ const symbolSnippets: Snippet[] = [
   { label: "$$\\Omega$$", value: "\\Omega ", tooltip: "Omega (uppercase)" },
 ];
 
-const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}`;
+const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}\n\\smiles{C1=CC=C(C=C1)C(C(C(=O)O)N)O}`;
 
 declare global {
   interface Window {
     renderMathInElement: (element: HTMLElement, options: any) => void;
+    SmilesDrawer: SmilesDrawer;
   }
 }
 
@@ -114,6 +116,31 @@ export function MathEquationEditor() {
                         { left: "\\[", right: "\\]", display: true }
                     ],
                     throwOnError: false,
+                    macros: {
+                      "\\smiles": (context: any) => {
+                          const smiles = context.consumeArgs(1)[0].map((t: any) => t.text).join('');
+                          const id = `smiles-${Math.random().toString(36).substring(7)}`;
+
+                          setTimeout(() => {
+                              const container = document.getElementById(id);
+                              if (container) {
+                                  const drawer = new window.SmilesDrawer.Drawer({
+                                    width: 250,
+                                    height: 200,
+                                  });
+                                  window.SmilesDrawer.parse(smiles, (tree: any) => {
+                                      drawer.draw(tree, id, 'light', false);
+                                  }, (err: any) => {
+                                      console.error(err);
+                                      container.innerText = "Invalid SMILES string";
+                                      container.className = "text-destructive text-sm p-2";
+                                  });
+                              }
+                          }, 0);
+
+                          return `<span id="${id}"></span>`;
+                      }
+                    }
                 });
             } catch (error: any) {
                 previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
@@ -229,8 +256,7 @@ export function MathEquationEditor() {
         
         if (openPos !== -1) {
             const alreadyLeft = text.substring(openPos - 5, openPos) === '\\left';
-            const alreadyRight = text.substring(start-1 - 6, start-1) === '\\right';
-            if(alreadyLeft || alreadyRight) return;
+            if(alreadyLeft) return;
 
             const expression = text.substring(openPos + 1, start - 1);
             if (expression.includes('\\sum') || expression.includes('\\int') || expression.includes('\\frac')) {
@@ -244,8 +270,8 @@ export function MathEquationEditor() {
                 
                 setLatex(newText);
                 setTimeout(() => {
-                const newCursorPos = start + '\\left'.length + '\\right'.length;
-                textarea.selectionStart = textarea.selectionEnd = newCursorPos + 1;
+                  const newCursorPos = start + '\\left'.length + '\\right'.length;
+                  textarea.selectionStart = textarea.selectionEnd = newCursorPos + 1;
                 }, 0);
                 return;
             }
