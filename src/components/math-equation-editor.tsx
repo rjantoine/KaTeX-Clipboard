@@ -223,10 +223,10 @@ export function MathEquationEditor() {
           const expression = text.substring(openPos + 1, start - 1);
           if (expression.includes('\\sum') || expression.includes('\\int') || expression.includes('\\frac')) {
             event.preventDefault();
-            const newText = text.substring(0, openPos) + '\\left' + text.substring(openPos, start) + '\\right' + text.substring(start);
+            const newText = text.substring(0, openPos) + '\\left' + text.substring(openPos, start) + '\\right ' + text.substring(start);
             setLatex(newText);
             setTimeout(() => {
-              textarea.selectionStart = textarea.selectionEnd = start + '\\left'.length + '\\right'.length;
+              textarea.selectionStart = textarea.selectionEnd = start + '\\left'.length + '\\right '.length;
             }, 0);
             return;
           }
