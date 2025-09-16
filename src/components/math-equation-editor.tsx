@@ -188,16 +188,22 @@ export function MathEquationEditor() {
     if (event.key === '/') {
         event.preventDefault();
         const textBefore = text.substring(0, start);
+        
         const lastSpace = textBefore.lastIndexOf(' ');
-        const segment = lastSpace === -1 ? textBefore : textBefore.substring(lastSpace + 1);
+        const lastNewline = textBefore.lastIndexOf('\n');
+        const lastDoubleSlash = textBefore.lastIndexOf('\\\\');
+        
+        const lastSeparator = Math.max(lastSpace, lastNewline, lastDoubleSlash > -1 ? lastDoubleSlash + 1 : -1);
 
-        const newTextBefore = lastSpace === -1 ? '' : textBefore.substring(0, lastSpace + 1);
-        const newText = newTextBefore + `\\frac{${segment}}{}` + text.substring(end);
+        const segment = lastSeparator === -1 ? textBefore : textBefore.substring(lastSeparator + 1);
+
+        const newTextBefore = lastSeparator === -1 ? '' : textBefore.substring(0, lastSeparator + 1);
+        const newText = newTextBefore + `\\frac{${segment.trim()}}{}` + text.substring(end);
         
         setLatex(newText);
         
         setTimeout(() => {
-            const newCursorPos = newTextBefore.length + `\\frac{${segment}}{`.length;
+            const newCursorPos = newTextBefore.length + `\\frac{${segment.trim()}}{`.length;
             textarea.selectionStart = textarea.selectionEnd = newCursorPos;
         }, 0);
         return;
@@ -208,9 +214,11 @@ export function MathEquationEditor() {
       const charBefore = text[start - 1];
       if (charBefore === ')' || charBefore === ']') {
         const openBracket = charBefore === ')' ? '(' : '[';
-        let balance = 1;
+        let balance = 0;
         let openPos = -1;
-        for (let i = start - 2; i >= 0; i--) {
+
+        // Find matching opening bracket
+        for (let i = start - 1; i >= 0; i--) {
           if (text[i] === charBefore) balance++;
           if (text[i] === openBracket) balance--;
           if (balance === 0) {
@@ -218,24 +226,29 @@ export function MathEquationEditor() {
             break;
           }
         }
-
+        
         if (openPos !== -1) {
-          const expression = text.substring(openPos + 1, start - 1);
-          if (expression.includes('\\sum') || expression.includes('\\int') || expression.includes('\\frac')) {
-            event.preventDefault();
-            const newText =
-              text.substring(0, openPos) +
-              '\\left' +
-              text.substring(openPos, start - 1) +
-              '\\right' +
-              text.substring(start - 1);
-            setLatex(newText);
-            setTimeout(() => {
-              // The cursor should be after the space
-              textarea.selectionStart = textarea.selectionEnd = start + '\\left'.length + '\\right'.length;
-            }, 0);
-            return;
-          }
+            const alreadyLeft = text.substring(openPos - 5, openPos) === '\\left';
+            const alreadyRight = text.substring(start-1 - 6, start-1) === '\\right';
+            if(alreadyLeft || alreadyRight) return;
+
+            const expression = text.substring(openPos + 1, start - 1);
+            if (expression.includes('\\sum') || expression.includes('\\int') || expression.includes('\\frac')) {
+                event.preventDefault();
+                const newText =
+                text.substring(0, openPos) +
+                '\\left' +
+                text.substring(openPos, start-1) +
+                '\\right' +
+                text.substring(start-1);
+                
+                setLatex(newText);
+                setTimeout(() => {
+                const newCursorPos = start + '\\left'.length + '\\right'.length;
+                textarea.selectionStart = textarea.selectionEnd = newCursorPos + 1;
+                }, 0);
+                return;
+            }
         }
       }
     }
