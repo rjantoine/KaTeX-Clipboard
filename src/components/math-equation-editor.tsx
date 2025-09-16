@@ -153,34 +153,121 @@ export function MathEquationEditor() {
   };
   
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === 'Enter') {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+
+    // 1. Auto-closing brackets
+    const bracketMap: { [key: string]: string } = { '(': ')', '[': ']', '{': '}' };
+    if (bracketMap[event.key]) {
       event.preventDefault();
-      const textarea = textareaRef.current;
-      if (!textarea) return;
+      const closingBracket = bracketMap[event.key];
+      const newText = text.substring(0, start) + event.key + closingBracket + text.substring(end);
+      setLatex(newText);
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1;
+      }, 0);
+      return;
+    }
 
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const text = textarea.value;
+    // 3. Auto-exponent brackets
+    if (event.key === '^') {
+      event.preventDefault();
+      const newText = text.substring(0, start) + '^{}' + text.substring(end);
+      setLatex(newText);
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 2;
+      }, 0);
+      return;
+    }
 
-      const textBeforeCursor = text.substring(0, start);
-      if (textBeforeCursor.endsWith('\\\\')) {
-        const newText = text.substring(0, start) + '\n' + text.substring(end);
+    // 4. Fraction shortcut
+    if (event.key === '/') {
+        event.preventDefault();
+        const textBefore = text.substring(0, start);
+        const lastSpace = textBefore.lastIndexOf(' ');
+        const segment = lastSpace === -1 ? textBefore : textBefore.substring(lastSpace + 1);
+
+        const newTextBefore = lastSpace === -1 ? '' : textBefore.substring(0, lastSpace + 1);
+        const newText = newTextBefore + `\\frac{${segment}}{}` + text.substring(end);
+        
         setLatex(newText);
+        
         setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = start + 1;
+            const newCursorPos = newTextBefore.length + `\\frac{${segment}}{`.length;
+            textarea.selectionStart = textarea.selectionEnd = newCursorPos;
         }, 0);
         return;
-      }
-      
-      const newText = text.substring(0, start) + ' \\\\\n' + text.substring(end);
-      
-      setLatex(newText);
+    }
 
+    // 2. Auto \left and \right
+    if (event.key === ' ') {
+      const charBefore = text[start - 1];
+      if (charBefore === ')' || charBefore === ']') {
+        const openBracket = charBefore === ')' ? '(' : '[';
+        let balance = 1;
+        let openPos = -1;
+        for (let i = start - 2; i >= 0; i--) {
+          if (text[i] === charBefore) balance++;
+          if (text[i] === openBracket) balance--;
+          if (balance === 0) {
+            openPos = i;
+            break;
+          }
+        }
+
+        if (openPos !== -1) {
+          const expression = text.substring(openPos + 1, start - 1);
+          if (expression.includes('\\sum') || expression.includes('\\int') || expression.includes('\\frac')) {
+            event.preventDefault();
+            const newText = text.substring(0, openPos) + '\\left' + text.substring(openPos, start) + '\\right' + text.substring(start);
+            setLatex(newText);
+            setTimeout(() => {
+              textarea.selectionStart = textarea.selectionEnd = start + '\\left'.length + '\\right'.length;
+            }, 0);
+            return;
+          }
+        }
+      }
+    }
+
+    // 5. Align environment
+    if (event.key === 'A' && event.altKey && event.shiftKey) {
+        event.preventDefault();
+        if(alignEquals) {
+            handleToggleAlign(false);
+            setTimeout(() => handleToggleAlign(true), 0);
+        } else {
+            handleToggleAlign(true);
+        }
+        return;
+    }
+    
+    // 6. Newline without \\
+    if (event.key === 'Enter' && event.shiftKey) {
+      event.preventDefault();
+      const newText = text.substring(0, start) + '\n' + text.substring(end);
+      setLatex(newText);
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1;
+      }, 0);
+      return;
+    }
+
+    // Original Enter behavior
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      const newText = text.substring(0, start) + ' \\\\\n' + text.substring(end);
+      setLatex(newText);
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + 4;
       }, 0);
     }
   };
+
 
   const insertSnippet = (snippet: string) => {
     const textarea = textareaRef.current;
