@@ -226,12 +226,13 @@ export function MathEquationEditor() {
             const newText =
               text.substring(0, openPos) +
               '\\left' +
-              text.substring(openPos, start) +
-              '\\right ' +
-              text.substring(start);
+              text.substring(openPos, start - 1) +
+              '\\right' +
+              text.substring(start - 1);
             setLatex(newText);
             setTimeout(() => {
-              textarea.selectionStart = textarea.selectionEnd = start + '\\left'.length + '\\right '.length;
+              // The cursor should be after the space
+              textarea.selectionStart = textarea.selectionEnd = start + '\\left'.length + '\\right'.length;
             }, 0);
             return;
           }
