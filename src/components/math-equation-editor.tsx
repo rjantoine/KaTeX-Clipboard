@@ -235,19 +235,14 @@ export function MathEquationEditor() {
     }
 
     // 5. Align environment
-    if (event.key === 'A' && event.altKey && event.shiftKey) {
+    if (event.key.toLowerCase() === 'a' && (event.metaKey || event.ctrlKey) && event.shiftKey) {
         event.preventDefault();
-        if(alignEquals) {
-            handleToggleAlign(false);
-            setTimeout(() => handleToggleAlign(true), 0);
-        } else {
-            handleToggleAlign(true);
-        }
+        handleToggleAlign(!alignEquals);
         return;
     }
     
     // 6. Newline without \\
-    if (event.key === 'Enter' && event.shiftKey) {
+    if (event.key === 'Enter' && event.altKey) {
       event.preventDefault();
       const newText = text.substring(0, start) + '\n' + text.substring(end);
       setLatex(newText);
