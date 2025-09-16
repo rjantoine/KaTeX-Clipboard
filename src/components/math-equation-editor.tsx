@@ -82,6 +82,7 @@ declare global {
   interface Window {
     renderMathInElement: (element: HTMLElement, options: any) => void;
     SmilesDrawer: SmilesDrawer;
+    katex: any;
   }
 }
 
@@ -137,10 +138,25 @@ export function MathEquationEditor() {
                                   });
                               }
                           }, 0);
-
-                          return `<span id="${id}"></span>`;
+                          
+                          const span = document.createElement('span');
+                          span.id = id;
+                          
+                          // This is a bit of a hack to get KaTeX to render raw HTML
+                          const htmlNode = new window.katex.CustomNode(span, {
+                            type: "html",
+                            body: span.outerHTML,
+                            attributes: {id: id}
+                          });
+                          
+                          return {
+                            type: "html",
+                            html: span.outerHTML,
+                            htmlNode: htmlNode
+                          };
                       }
-                    }
+                    },
+                    trust: (context: any) => context.command === '\\smiles',
                 });
             } catch (error: any) {
                 previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
