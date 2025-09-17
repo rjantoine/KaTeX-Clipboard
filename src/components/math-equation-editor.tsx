@@ -103,10 +103,10 @@ export function MathEquationEditor() {
   }, [])
   
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !previewRef.current) return;
   
-    if (previewRef.current) {
-        if (window.renderMathInElement) {
+    const renderLatex = () => {
+        if (window.renderMathInElement && previewRef.current) {
             const processedLatex = latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
             previewRef.current.innerHTML = processedLatex;
             try {
@@ -119,47 +119,59 @@ export function MathEquationEditor() {
                     ],
                     throwOnError: false,
                     macros: {
-                      "\\smiles": (context: any) => {
-                          const arg = context.consumeArgs(1)[0];
-                          if (!arg) {
-                            return { type: "html", mode: context.mode, html: `<span></span>`};
-                          }
-                          const smiles = arg.map((t: any) => t.text).join('');
-                          const id = `smiles-${Math.random().toString(36).substring(7)}`;
-
-                          setTimeout(() => {
-                              const container = document.getElementById(id);
-                              if (container) {
-                                  const drawer = new window.SmilesDrawer.Drawer({
-                                    width: 250,
-                                    height: 200,
-                                  });
-                                  window.SmilesDrawer.parse(smiles, (tree: any) => {
-                                      drawer.draw(tree, id, 'light', false);
-                                  }, (err: any) => {
-                                      console.error(err);
-                                      container.innerText = "Invalid SMILES string";
-                                      container.className = "text-destructive text-sm p-2";
-                                  });
-                              }
-                          }, 0);
-                          
-                          return {
-                            type: "html",
-                            mode: context.mode,
-                            html: `<span id="${id}"></span>`,
-                          };
-                      }
-                    },
-                    trust: (context: any) => context.command === '\\smiles',
+                      "\\smiles": "\\text{[SMILES:#1]}",
+                    }
                 });
             } catch (error: any) {
                 previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
             }
         }
-    }
+    };
+
+    const processSmiles = () => {
+        if (!previewRef.current || !window.SmilesDrawer) return;
+
+        const walker = document.createTreeWalker(previewRef.current, NodeFilter.SHOW_TEXT, null);
+        let node;
+        const nodesToReplace = [];
+
+        while (node = walker.nextNode()) {
+            const match = node.nodeValue?.match(/\[SMILES:(.*?)\]/);
+            if (match) {
+                nodesToReplace.push({ node, smiles: match[1] });
+            }
+        }
+
+        nodesToReplace.forEach(({ node, smiles }) => {
+            const drawer = new window.SmilesDrawer.Drawer({ width: 250, height: 200, bondThickness: 1 });
+            const svgContainer = document.createElement('span');
+            svgContainer.style.display = 'inline-block';
+            svgContainer.style.verticalAlign = 'middle';
+
+            window.SmilesDrawer.parse(smiles,
+                (tree: any) => {
+                    drawer.draw(tree, svgContainer, 'light', false);
+                    if (node.parentNode) {
+                        node.parentNode.replaceChild(svgContainer, node);
+                    }
+                },
+                (err: any) => {
+                    console.error('SMILES parsing error:', err);
+                    const errorSpan = document.createElement('span');
+                    errorSpan.className = 'text-destructive text-sm';
+                    errorSpan.textContent = `Invalid SMILES: ${smiles}`;
+                     if (node.parentNode) {
+                        node.parentNode.replaceChild(errorSpan, node);
+                    }
+                }
+            );
+        });
+    };
+
+    renderLatex();
+    processSmiles();
     
-    document.querySelectorAll('.latex-button').forEach(elem => {
+    document.querySelectorAll('.latex-button')?.forEach(elem => {
       if (window.renderMathInElement) {
         window.renderMathInElement(elem as HTMLElement, {
           delimiters: [
@@ -595,7 +607,5 @@ export function MathEquationEditor() {
     </TooltipProvider>
   );
 }
-
-    
 
     
