@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -119,7 +120,11 @@ export function MathEquationEditor() {
                     throwOnError: false,
                     macros: {
                       "\\smiles": (context: any) => {
-                          const smiles = context.consumeArgs(1)[0].map((t: any) => t.text).join('');
+                          const arg = context.consumeArgs(1)[0];
+                          if (!arg) {
+                            return { type: "html", mode: context.mode, html: `<span></span>`};
+                          }
+                          const smiles = arg.map((t: any) => t.text).join('');
                           const id = `smiles-${Math.random().toString(36).substring(7)}`;
 
                           setTimeout(() => {
@@ -590,5 +595,7 @@ export function MathEquationEditor() {
     </TooltipProvider>
   );
 }
+
+    
 
     
