@@ -11,16 +11,17 @@ import {
   Sigma,
   InfinityIcon,
   Info,
+  CaseSensitive,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import type { SmilesDrawer } from "smiles-drawer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Snippet = {
   label: string;
@@ -91,7 +92,6 @@ declare global {
 
 export function MathEquationEditor() {
   const [latex, setLatex] = useState(initialLatex);
-  const [alignEquals, setAlignEquals] = useState(false);
   const [isCopyingImage, setIsCopyingImage] = useState(false);
   const [justCopiedImage, setJustCopiedImage] = useState(false);
   const [justCopiedLatex, setJustCopiedLatex] = useState(false);
@@ -125,8 +125,6 @@ export function MathEquationEditor() {
                       "\\hsmiles": "\\htmlClass{smiles-container}{\\htmlClass{rawsmiles}{\\text{#1}} \\htmlClass{smiles-height}{\\text{#2}}}",
                       "\\smiles": "\\@ifstar{\\hsmiles{#1}}{\\hsmiles{#1}{2}}"
                     },
-                    
-                    // ** Fix the \\def stuff
                     trust: true
                 });
             } catch (error: any) {
@@ -179,27 +177,28 @@ export function MathEquationEditor() {
     });
   }, [latex, isClient]);
 
-  const addAligned = () => {
-    const newLatex = `\\begin{aligned}\n${latex
-      .split('\n')
-      .map(line => line.replace(/=/g, " &= ").replace(/ ->/g, " &->"))
-      .join('\n')}\n\\end{aligned}`;
-    setLatex(newLatex);
+  const addAligned = (alignTarget: "math" | "chem") => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+
+    const alignRegex = alignTarget === 'math' ? /=/g : /->/g;
+    const alignReplacement = alignTarget === 'math' ? ' &= ' : ' &-> ';
+
+    if (start !== end) { // Text is selected
+      const selectedText = text.substring(start, end);
+      const alignedSelection = `\\begin{aligned}\n${selectedText.replace(alignRegex, alignReplacement)}\n\\end{aligned}`;
+      const newText = text.substring(0, start) + alignedSelection + text.substring(end);
+      setLatex(newText);
+    } else { // No text selected, apply to all
+      const newLatex = `\\begin{aligned}\n${text.replace(alignRegex, alignReplacement)}\n\\end{aligned}`;
+      setLatex(newLatex);
+    }
   }
-  const removeAligned = () => {
-    const newLatex = latex
-      .replace(/\\begin{aligned}\n?/, "")
-      .replace(/\n?\\end{aligned}/, "")
-      .replace(/ &= /g, "=")
-      .replace(/ &->/g, "->")
-    setLatex(newLatex);
-  }
-  const handleToggleAlign = (checked: boolean) => {
-    setAlignEquals(checked);
-    if (checked) addAligned()
-    else removeAligned()
-  };
-  
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -251,7 +250,7 @@ export function MathEquationEditor() {
         setLatex(newText);
         
         setTimeout(() => {
-            const newCursorPos = newTextBefore.length + `\\frac{${segment.trim()}}{`.length;
+            const newCursorPos = newTextBefore.length + `\\frac{${segment.trim()}}{}`.length;
             textarea.selectionStart = textarea.selectionEnd = newCursorPos;
         }, 0);
         return;
@@ -300,12 +299,7 @@ export function MathEquationEditor() {
       }
     }
 
-    // 5. Align environment
-    if (event.key.toLowerCase() === 'a' && (event.metaKey || event.ctrlKey) && event.shiftKey) {
-        event.preventDefault();
-        handleToggleAlign(!alignEquals);
-        return;
-    }
+    // 5. Align environment (removed as per new button logic)
     
     // 6. Newline without \\
     if (event.key === 'Enter' && event.altKey) {
@@ -319,7 +313,7 @@ export function MathEquationEditor() {
     }
 
     // Original Enter behavior
-    if (event.key === 'Enter' && !event.shiftKey && !alignEquals) {
+    if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       const newText = text.substring(0, start) + ' \\\\\n' + text.substring(end);
       setLatex(newText);
@@ -453,129 +447,157 @@ export function MathEquationEditor() {
                 {isClient ? <div ref={previewRef} className="text-2xl" /> : <div className="text-2xl">Loading preview...</div>}
             </div>
           </div>
-          <div className="space-y-4">
-            <div>
-              <Label className="flex items-center gap-2 text-sm font-medium">
-                <Sigma size={16} />
-                Math Snippets
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <a href="https://katex.org/docs/supported" target="_blank" rel="noopener noreferrer" className="ml-1">
-                      <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Supported Functions (KaTeX)</p>
-                  </TooltipContent>
-                </Tooltip>
-              </Label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {mathSnippets.map((snippet) => (
-                  <Tooltip key={snippet.value}>
+          
+          <Tabs defaultValue="math" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="math"><Sigma size={16} className="mr-2"/>Math</TabsTrigger>
+              <TabsTrigger value="chem"><FlaskConical size={16} className="mr-2"/>Chemistry</TabsTrigger>
+              <TabsTrigger value="symbols"><InfinityIcon size={16} className="mr-2"/>Symbols</TabsTrigger>
+            </TabsList>
+            <TabsContent value="math" className="mt-4">
+              <div className="space-y-4">
+                 <Label className="flex items-center gap-2 text-sm font-medium">
+                  Snippets
+                  <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => insertSnippet(snippet.value)}
-                        className="latex-button h-auto py-2"
-                      >
-                        {snippet.label}
-                      </Button>
+                      <a href="https://katex.org/docs/supported" target="_blank" rel="noopener noreferrer" className="ml-1">
+                        <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                      </a>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{snippet.tooltip}</p>
+                      <p>Supported Functions (KaTeX)</p>
                     </TooltipContent>
                   </Tooltip>
-                ))}
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addAligned('math')}
+                          className="h-auto py-2"
+                        >
+                          <CaseSensitive className="mr-2 h-4 w-4" />
+                          Align
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Align selected equations at '='</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  {mathSnippets.map((snippet) => (
+                    <Tooltip key={snippet.value}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => insertSnippet(snippet.value)}
+                          className="latex-button h-auto py-2"
+                        >
+                          {snippet.label}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{snippet.tooltip}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div>
-              <Label className="flex items-center gap-2 text-sm font-medium">
-                <FlaskConical size={16} />
-                Chemistry Snippets
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <a href="https://mhchem.github.io/MathJax-mhchem/" target="_blank" rel="noopener noreferrer" className="ml-1">
-                      <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Supported Chemistry Notation (mhchem)</p>
-                  </TooltipContent>
-                </Tooltip>
-              </Label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {chemistrySnippets.map((snippet) => (
-                  <Tooltip key={snippet.value}>
+            </TabsContent>
+            <TabsContent value="chem" className="mt-4">
+               <div className="space-y-4">
+                 <Label className="flex items-center gap-2 text-sm font-medium">
+                  Snippets
+                  <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => insertSnippet(snippet.value)}
-                        className="latex-button h-auto py-2"
-                      >
-                        {snippet.label}
-                      </Button>
+                      <a href="https://mhchem.github.io/MathJax-mhchem/" target="_blank" rel="noopener noreferrer" className="ml-1">
+                        <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                      </a>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{snippet.tooltip}</p>
+                      <p>Supported Chemistry Notation (mhchem)</p>
                     </TooltipContent>
                   </Tooltip>
-                ))}
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addAligned('chem')}
+                          className="h-auto py-2"
+                        >
+                          <CaseSensitive className="mr-2 h-4 w-4" />
+                          Align
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Align selected reactions at '→'</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  {chemistrySnippets.map((snippet) => (
+                    <Tooltip key={snippet.value}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => insertSnippet(snippet.value)}
+                          className="latex-button h-auto py-2"
+                        >
+                          {snippet.label}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{snippet.tooltip}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div>
-              <Label className="flex items-center gap-2 text-sm font-medium">
-                <InfinityIcon size={16} />
-                Symbol Snippets
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <a href="https://katex.org/docs/supported#letters-and-unicode" target="_blank" rel="noopener noreferrer" className="ml-1">
-                      <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Supported Symbols (KaTeX)</p>
-                  </TooltipContent>
-                </Tooltip>
-              </Label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {symbolSnippets.map((snippet) => (
-                  <Tooltip key={snippet.value}>
+            </TabsContent>
+            <TabsContent value="symbols" className="mt-4">
+               <div className="space-y-4">
+                 <Label className="flex items-center gap-2 text-sm font-medium">
+                  Snippets
+                  <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => insertSnippet(snippet.value)}
-                        className="latex-button h-auto py-2"
-                      >
-                        {snippet.label}
-                      </Button>
+                      <a href="https://katex.org/docs/supported#letters-and-unicode" target="_blank" rel="noopener noreferrer" className="ml-1">
+                        <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                      </a>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{snippet.tooltip}</p>
+                      <p>Supported Symbols (KaTeX)</p>
                     </TooltipContent>
                   </Tooltip>
-                ))}
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {symbolSnippets.map((snippet) => (
+                    <Tooltip key={snippet.value}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => insertSnippet(snippet.value)}
+                          className="latex-button h-auto py-2"
+                        >
+                          {snippet.label}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{snippet.tooltip}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col items-start gap-4 border-t bg-background/50 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="align-equals"
-              checked={alignEquals}
-              onCheckedChange={(checked) => handleToggleAlign(checked as boolean)}
-            />
-            <Label
-              htmlFor="align-equals"
-              className="cursor-pointer font-medium"
-            >
-              Align '=' signs and ->
-            </Label>
-          </div>
+            </TabsContent>
+          </Tabs>
 
+        </CardContent>
+        <CardFooter className="flex flex-col items-center gap-4 border-t bg-background/50 p-4 sm:flex-row sm:justify-end">
           <div className="flex gap-2">
             <Button
               variant="secondary"
@@ -605,3 +627,5 @@ export function MathEquationEditor() {
     </TooltipProvider>
   );
 }
+
+    
