@@ -125,8 +125,11 @@ export function MathEquationEditor() {
                     ],
                     throwOnError: false,
                     macros: {
-                      "\\smiles": "\\htmlClass{smiles-container}{\\htmlClass{rawsmiles}{\\text{#1}} \\htmlClass{smiles-height}{\\text{#2}}}",
+                      "\\hsmiles": "\\htmlClass{smiles-container}{\\htmlClass{rawsmiles}{\\text{#1}} \\htmlClass{smiles-height}{\\text{#2}}}",
+                      "\\smiles": "\\@ifstar{\\hsmiles{#1}}{\\hsmiles{#1}{2}}"
                     },
+                    
+                    // ** Fix the \\def stuff
                     trust: true
                 });
             } catch (error: any) {
