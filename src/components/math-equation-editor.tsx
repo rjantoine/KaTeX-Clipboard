@@ -77,7 +77,9 @@ const symbolSnippets: Snippet[] = [
   { label: "$$\\Omega$$", value: "\\Omega ", tooltip: "Omega (uppercase)" },
 ];
 
-const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}\n\\smiles{C1=CC=C(C=C1)C(C(C(=O)O)N)O}*{5}`;
+const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} \\\\
+\\ce{H2O -> H+ + OH-} \\\\
+\\smiles{C1=CC=C(C=C1)C(C(C(=O)O)N)O}*{5}`;
 
 declare global {
   interface Window {
@@ -107,12 +109,7 @@ export function MathEquationEditor() {
   
     const renderLatex = () => {
         if (window.renderMathInElement && previewRef.current) {
-            let processedLatex;
-            if (latex.includes('\\begin{aligned}')) {
-                processedLatex = `$$${latex}$$`;
-            } else {
-                processedLatex = latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
-            }
+            let processedLatex = `$$${latex}$$`;
             previewRef.current.innerHTML = processedLatex;
 
             try {
