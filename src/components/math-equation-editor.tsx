@@ -77,7 +77,7 @@ const symbolSnippets: Snippet[] = [
   { label: "$$\\Omega$$", value: "\\Omega ", tooltip: "Omega (uppercase)" },
 ];
 
-const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}\n\\smiles{C1=CC=C(C=C1)C(C(C(=O)O)N)O}`;
+const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}\n\\smiles{C1=CC=C(C=C1)C(C(C(=O)O)N)O}[3]`;
 
 declare global {
   interface Window {
@@ -119,8 +119,9 @@ export function MathEquationEditor() {
                     ],
                     throwOnError: false,
                     macros: {
-                      "\\smiles": "\\text{[SMILES:#1]}",
-                    }
+                      "\\smiles": "\\htmlClass{smiles-container}{\\htmlClass{rawsmiles}{\\text{#1}} \\htmlClass{smiles-height}{\\text{#2}}}",
+                    },
+                    trust: true
                 });
             } catch (error: any) {
                 previewRef.current.innerHTML = `<span class="text-destructive p-4">${error.message}</span>`;
@@ -131,40 +132,29 @@ export function MathEquationEditor() {
     const processSmiles = () => {
         if (!previewRef.current || !window.SmilesDrawer) return;
 
-        const walker = document.createTreeWalker(previewRef.current, NodeFilter.SHOW_TEXT, null);
-        let node;
-        const nodesToReplace = [];
+        previewRef.current.querySelectorAll(".smiles-container").forEach((el) => {
+          const smilesEl = el.querySelector('.rawsmiles .mord');
+          const heightEl = el.querySelector('.smiles-height .mord');
+          
+          const smiles = smilesEl?.textContent?.trim();
+          const height = heightEl?.textContent?.trim() || '2';
 
-        while (node = walker.nextNode()) {
-            const match = node.nodeValue?.match(/\[SMILES:(.*?)\]/);
-            if (match) {
-                nodesToReplace.push({ node, smiles: match[1] });
-            }
-        }
+          if (smiles) {
+            const svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svgContainer.dataset.smiles = smiles;
+            svgContainer.style.height = `${height}em`;
+            el.replaceWith(svgContainer);
+          }
+        });
 
-        nodesToReplace.forEach(({ node, smiles }) => {
-            const drawer = new window.SmilesDrawer.Drawer({ width: 250, height: 200, bondThickness: 1 });
-            const svgContainer = document.createElement('span');
-            svgContainer.style.display = 'inline-block';
-            svgContainer.style.verticalAlign = 'middle';
+        window.SmiDrawer.apply();
 
-            window.SmilesDrawer.parse(smiles,
-                (tree: any) => {
-                    drawer.draw(tree, svgContainer, 'light', false);
-                    if (node.parentNode) {
-                        node.parentNode.replaceChild(svgContainer, node);
-                    }
-                },
-                (err: any) => {
-                    console.error('SMILES parsing error:', err);
-                    const errorSpan = document.createElement('span');
-                    errorSpan.className = 'text-destructive text-sm';
-                    errorSpan.textContent = `Invalid SMILES: ${smiles}`;
-                     if (node.parentNode) {
-                        node.parentNode.replaceChild(errorSpan, node);
-                    }
-                }
-            );
+        previewRef.current.querySelectorAll("svg[data-smiles]").forEach(el => {
+          if(!(el instanceof SVGElement)) return;
+          const bbox = el.getBBox();
+          el.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
+          el.setAttribute("width", `${bbox.width}px`);
+          el.setAttribute("height", `${bbox.height}px`);
         });
     };
 
@@ -287,14 +277,14 @@ export function MathEquationEditor() {
                 const newText =
                 text.substring(0, openPos) +
                 '\\left' +
-                text.substring(openPos, start - 1) +
+                text.substring(openPos, start-1) +
                 '\\right' +
-                text.substring(start - 1);
+                text.substring(start-1);
                 
                 setLatex(newText);
                 setTimeout(() => {
                   const newCursorPos = start + '\\left'.length + '\\right'.length;
-                  textarea.selectionStart = textarea.selectionEnd = newCursorPos + 1;
+                  textarea.selectionStart = textarea.selectionEnd = newCursorPos;
                 }, 0);
                 return;
             }

@@ -82,3 +82,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+.katex svg[data-smiles] {
+  all: initial!important;        /* reset inherited KaTeX CSS */
+  width: auto!important;
+  display: inline-block!important;
+  vertical-align: middle;
+}
