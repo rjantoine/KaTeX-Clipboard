@@ -77,7 +77,7 @@ const symbolSnippets: Snippet[] = [
   { label: "$$\\Omega$$", value: "\\Omega ", tooltip: "Omega (uppercase)" },
 ];
 
-const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}\n\\smiles{C1=CC=C(C=C1)C(C(C(=O)O)N)O}`;
+const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}\n\\smiles{C1=CC=C(C=C1)C(C(C(=O)O)N)O}*{5}`;
 
 declare global {
   interface Window {
