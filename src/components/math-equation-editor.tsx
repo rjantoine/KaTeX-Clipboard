@@ -77,7 +77,7 @@ const symbolSnippets: Snippet[] = [
   { label: "$$\\Omega$$", value: "\\Omega ", tooltip: "Omega (uppercase)" },
 ];
 
-const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}\n\\smiles{C1=CC=C(C=C1)C(C(C(=O)O)N)O}{3}`;
+const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}\n\\smiles{C1=CC=C(C=C1)C(C(C(=O)O)N)O}`;
 
 declare global {
   interface Window {
@@ -107,8 +107,14 @@ export function MathEquationEditor() {
   
     const renderLatex = () => {
         if (window.renderMathInElement && previewRef.current) {
-            const processedLatex = latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
+            let processedLatex;
+            if (latex.includes('\\begin{aligned}')) {
+                processedLatex = `$$${latex}$$`;
+            } else {
+                processedLatex = latex.split('\n').map(line => line.trim() ? `$$${line}$$` : '').join('');
+            }
             previewRef.current.innerHTML = processedLatex;
+
             try {
                 window.renderMathInElement(previewRef.current, {
                     delimiters: [
@@ -154,8 +160,6 @@ export function MathEquationEditor() {
           if(!(el instanceof SVGElement)) return;
           const bbox = el.getBBox();
           el.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
-          // el.setAttribute("width", `${bbox.width}px`);
-          // el.setAttribute("height", `${bbox.height}px`);
         });
     };
 
@@ -181,14 +185,15 @@ export function MathEquationEditor() {
       const newLatex = `\\begin{aligned}\n${latex
         .split('\n')
         .map(line => line.replace(/=/g, " &= ").replace(/ ->/g, " &->"))
-        .join('\n')}\n\\end{aligned}`;
+        .join(' \\\\\n')}\n\\end{aligned}`;
       setLatex(newLatex);
     } else {
       const newLatex = latex
         .replace(/\\begin{aligned}\n?/, "")
         .replace(/\n?\\end{aligned}/, "")
         .replace(/ &= /g, "=")
-        .replace(/ &->/g, "->");
+        .replace(/ &->/g, "->")
+        .replace(/ \\\\\n/g, '\n');
       setLatex(newLatex);
     }
   };
@@ -312,7 +317,7 @@ export function MathEquationEditor() {
     }
 
     // Original Enter behavior
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === 'Enter' && !event.shiftKey && !alignEquals) {
       event.preventDefault();
       const newText = text.substring(0, start) + ' \\\\\n' + text.substring(end);
       setLatex(newText);
@@ -598,5 +603,3 @@ export function MathEquationEditor() {
     </TooltipProvider>
   );
 }
-
-    
