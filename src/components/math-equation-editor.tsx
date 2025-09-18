@@ -99,6 +99,7 @@ export function MathEquationEditor() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false)
+  const [activeTab, setActiveTab] = useState("math");
 
   useEffect(() => {
     setIsClient(true)
@@ -175,7 +176,7 @@ export function MathEquationEditor() {
         });
       }
     });
-  }, [latex, isClient]);
+  }, [latex, isClient, activeTab]);
 
   const addAligned = (alignTarget: "math" | "chem") => {
     const textarea = textareaRef.current;
@@ -448,7 +449,7 @@ export function MathEquationEditor() {
             </div>
           </div>
           
-          <Tabs defaultValue="math" className="w-full">
+          <Tabs defaultValue="math" className="w-full" onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="math"><Sigma size={16} className="mr-2"/>Math</TabsTrigger>
               <TabsTrigger value="chem"><FlaskConical size={16} className="mr-2"/>Chemistry</TabsTrigger>
@@ -627,5 +628,3 @@ export function MathEquationEditor() {
     </TooltipProvider>
   );
 }
-
-    
