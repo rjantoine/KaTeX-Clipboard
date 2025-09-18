@@ -179,22 +179,25 @@ export function MathEquationEditor() {
     });
   }, [latex, isClient]);
 
+  const addAligned = () => {
+    const newLatex = `\\begin{aligned}\n${latex
+      .split('\n')
+      .map(line => line.replace(/=/g, " &= ").replace(/ ->/g, " &->"))
+      .join('\n')}\n\\end{aligned}`;
+    setLatex(newLatex);
+  }
+  const removeAligned = () => {
+    const newLatex = latex
+      .replace(/\\begin{aligned}\n?/, "")
+      .replace(/\n?\\end{aligned}/, "")
+      .replace(/ &= /g, "=")
+      .replace(/ &->/g, "->")
+    setLatex(newLatex);
+  }
   const handleToggleAlign = (checked: boolean) => {
     setAlignEquals(checked);
-    if (checked) {
-      const newLatex = `\\begin{aligned}\n${latex
-        .split('\n')
-        .map(line => line.replace(/=/g, " &= ").replace(/ ->/g, " &->"))
-        .join('\n')}\n\\end{aligned}`;
-      setLatex(newLatex);
-    } else {
-      const newLatex = latex
-        .replace(/\\begin{aligned}\n?/, "")
-        .replace(/\n?\\end{aligned}/, "")
-        .replace(/ &= /g, "=")
-        .replace(/ &->/g, "->")
-      setLatex(newLatex);
-    }
+    if (checked) addAligned()
+    else removeAligned()
   };
   
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
