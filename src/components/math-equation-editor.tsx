@@ -185,7 +185,7 @@ export function MathEquationEditor() {
       const newLatex = `\\begin{aligned}\n${latex
         .split('\n')
         .map(line => line.replace(/=/g, " &= ").replace(/ ->/g, " &->"))
-        .join(' \\\\\n')}\n\\end{aligned}`;
+        .join('\n')}\n\\end{aligned}`;
       setLatex(newLatex);
     } else {
       const newLatex = latex
@@ -193,7 +193,6 @@ export function MathEquationEditor() {
         .replace(/\n?\\end{aligned}/, "")
         .replace(/ &= /g, "=")
         .replace(/ &->/g, "->")
-        .replace(/ \\\\\n/g, '\n');
       setLatex(newLatex);
     }
   };
