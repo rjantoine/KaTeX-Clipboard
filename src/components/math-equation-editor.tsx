@@ -77,7 +77,7 @@ const symbolSnippets: Snippet[] = [
   { label: "$$\\Omega$$", value: "\\Omega ", tooltip: "Omega (uppercase)" },
 ];
 
-const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}\n\\smiles{C1=CC=C(C=C1)C(C(C(=O)O)N)O}[3]`;
+const initialLatex = `f(x) = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n\\ce{H2O -> H+ + OH-}\n\\smiles{C1=CC=C(C=C1)C(C(C(=O)O)N)O}{3}`;
 
 declare global {
   interface Window {
@@ -142,7 +142,8 @@ export function MathEquationEditor() {
           if (smiles) {
             const svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svgContainer.dataset.smiles = smiles;
-            svgContainer.style.height = `${height}em`;
+            svgContainer.setAttribute("width", "auto")
+            svgContainer.setAttribute("height", `${height}em`)
             el.replaceWith(svgContainer);
           }
         });
@@ -153,8 +154,8 @@ export function MathEquationEditor() {
           if(!(el instanceof SVGElement)) return;
           const bbox = el.getBBox();
           el.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
-          el.setAttribute("width", `${bbox.width}px`);
-          el.setAttribute("height", `${bbox.height}px`);
+          // el.setAttribute("width", `${bbox.width}px`);
+          // el.setAttribute("height", `${bbox.height}px`);
         });
     };
 
