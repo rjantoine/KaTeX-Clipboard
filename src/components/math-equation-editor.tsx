@@ -96,7 +96,6 @@ export function MathEquationEditor() {
   const [latex, setLatex] = useState(initialLatex);
   const [isCopyingImage, setIsCopyingImage] = useState(false);
   const [justCopiedImage, setJustCopiedImage] = useState(false);
-  const [justCopiedSvg, setJustCopiedSvg] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
@@ -398,43 +397,27 @@ export function MathEquationEditor() {
     setIsCopyingImage(true);
 
     try {
-      const dataUrl = await htmlToImage.toPng(previewRef.current, {
-        pixelRatio: 4,
-        backgroundColor: 'transparent',
-      });
+        const dataUrl = await htmlToImage.toPng(previewRef.current, {
+            pixelRatio: 4,
+            backgroundColor: 'transparent',
+        });
       
-      const blob = await (await fetch(dataUrl)).blob();
+        const blob = await (await fetch(dataUrl)).blob();
 
-      await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type]: blob }),
-      ]);
+        await navigator.clipboard.write([
+            new ClipboardItem({ [blob.type]: blob }),
+        ]);
       
-      setJustCopiedImage(true);
-      setTimeout(() => setJustCopiedImage(false), 2000);
+        setJustCopiedImage(true);
+        setTimeout(() => setJustCopiedImage(false), 2000);
 
     } catch (error: any) {
       showToastError("Failed to copy PNG", error);
     } finally {
-      setIsCopyingImage(false);
+        setIsCopyingImage(false);
     }
   };
-  
-  const copySvgToClipboard = async () => {
-    if (!previewRef.current) return;
-    try {
-      const dataUrl = await htmlToImage.toSvg(previewRef.current, {
-        pixelRatio: 4,
-      });
-      const svgContent = await (await fetch(dataUrl)).text();
-      await navigator.clipboard.writeText(svgContent);
-      setJustCopiedSvg(true);
-      setTimeout(() => setJustCopiedSvg(false), 2000);
-    } catch (error: any) {
-      showToastError("Failed to copy SVG", error);
-    }
-  };
-
-  const downloadImage = async (format: "png" | "svg") => {
+const downloadImage = async (format: "png" | "svg") => {
     if (!previewRef.current) return;
     try {
       let dataUrl;
@@ -456,8 +439,6 @@ export function MathEquationEditor() {
       showToastError(`Failed to download ${format.toUpperCase()}`, error);
     }
   };
-
-
   return (
     <TooltipProvider>
       <Card className="overflow-hidden shadow-2xl shadow-primary/10">
@@ -637,25 +618,9 @@ export function MathEquationEditor() {
         </CardContent>
         <CardFooter className="flex flex-col items-center gap-4 border-t bg-background/50 p-4 sm:flex-row sm:justify-end">
           <div className="flex flex-wrap justify-end gap-2">
-            <Button onClick={() => downloadImage('svg')}>
-              <Download />
-              Download as SVG
-            </Button>
             <Button onClick={() => downloadImage('png')}>
               <FileImage />
               Download as PNG
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={copySvgToClipboard}
-              disabled={justCopiedSvg}
-            >
-              {justCopiedSvg ? (
-                <Check />
-              ) : (
-                <ClipboardCopy />
-              )}
-              {justCopiedSvg ? "Copied!" : "Copy as SVG"}
             </Button>
             <Button 
               onClick={copyImageToClipboard} 
