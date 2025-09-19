@@ -637,6 +637,14 @@ export function MathEquationEditor() {
         </CardContent>
         <CardFooter className="flex flex-col items-center gap-4 border-t bg-background/50 p-4 sm:flex-row sm:justify-end">
           <div className="flex flex-wrap justify-end gap-2">
+            <Button onClick={() => downloadImage('svg')}>
+              <Download />
+              Download as SVG
+            </Button>
+            <Button onClick={() => downloadImage('png')}>
+              <FileImage />
+              Download as PNG
+            </Button>
             <Button
               variant="secondary"
               onClick={copySvgToClipboard}
@@ -662,14 +670,6 @@ export function MathEquationEditor() {
                 <ImageIcon />
               )}
               {isCopyingImage ? "Copying..." : justCopiedImage ? "Copied!" : "Copy as PNG"}
-            </Button>
-            <Button onClick={() => downloadImage('svg')}>
-              <Download />
-              Download as SVG
-            </Button>
-            <Button onClick={() => downloadImage('png')}>
-              <FileImage />
-              Download as PNG
             </Button>
           </div>
         </CardFooter>
