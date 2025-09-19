@@ -6,6 +6,8 @@ import * as htmlToImage from "html-to-image";
 import {
   Check,
   ClipboardCopy,
+  Download,
+  FileImage,
   FlaskConical,
   ImageIcon,
   Sigma,
@@ -94,7 +96,7 @@ export function MathEquationEditor() {
   const [latex, setLatex] = useState(initialLatex);
   const [isCopyingImage, setIsCopyingImage] = useState(false);
   const [justCopiedImage, setJustCopiedImage] = useState(false);
-  const [justCopiedLatex, setJustCopiedLatex] = useState(false);
+  const [justCopiedSvg, setJustCopiedSvg] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
@@ -299,8 +301,6 @@ export function MathEquationEditor() {
         }
       }
     }
-
-    // 5. Align environment (removed as per new button logic)
     
     // 6. Newline without \\
     if (event.key === 'Enter' && event.altKey) {
@@ -384,6 +384,15 @@ export function MathEquationEditor() {
     }, 0);
   };
 
+  const showToastError = (title: string, error: any) => {
+    console.error(error);
+    toast({
+      variant: "destructive",
+      title,
+      description: error.message || "An unknown error occurred.",
+    });
+  };
+
   const copyImageToClipboard = async () => {
     if (!previewRef.current || isCopyingImage || justCopiedImage) return;
     setIsCopyingImage(true);
@@ -404,22 +413,50 @@ export function MathEquationEditor() {
       setTimeout(() => setJustCopiedImage(false), 2000);
 
     } catch (error: any) {
-      console.error("Failed to copy image:", error);
-      toast({
-        variant: "destructive",
-        title: "Copy Failed",
-        description: error.message || "Could not copy the equation as an image.",
-      });
+      showToastError("Failed to copy PNG", error);
     } finally {
       setIsCopyingImage(false);
     }
   };
   
-  const copyLatexToClipboard = () => {
-    navigator.clipboard.writeText(latex);
-    setJustCopiedLatex(true);
-    setTimeout(() => setJustCopiedLatex(false), 2000);
+  const copySvgToClipboard = async () => {
+    if (!previewRef.current) return;
+    try {
+      const dataUrl = await htmlToImage.toSvg(previewRef.current, {
+        pixelRatio: 4,
+      });
+      const svgContent = await (await fetch(dataUrl)).text();
+      await navigator.clipboard.writeText(svgContent);
+      setJustCopiedSvg(true);
+      setTimeout(() => setJustCopiedSvg(false), 2000);
+    } catch (error: any) {
+      showToastError("Failed to copy SVG", error);
+    }
   };
+
+  const downloadImage = async (format: "png" | "svg") => {
+    if (!previewRef.current) return;
+    try {
+      let dataUrl;
+      if (format === 'png') {
+        dataUrl = await htmlToImage.toPng(previewRef.current, { 
+          pixelRatio: 4, 
+          backgroundColor: 'transparent' 
+        });
+      } else {
+        dataUrl = await htmlToImage.toSvg(previewRef.current, { pixelRatio: 4 });
+      }
+      
+      const link = document.createElement('a');
+      link.download = `equation.${format}`;
+      link.href = dataUrl;
+      link.click();
+      link.remove();
+    } catch (error: any) {
+      showToastError(`Failed to download ${format.toUpperCase()}`, error);
+    }
+  };
+
 
   return (
     <TooltipProvider>
@@ -599,28 +636,40 @@ export function MathEquationEditor() {
 
         </CardContent>
         <CardFooter className="flex flex-col items-center gap-4 border-t bg-background/50 p-4 sm:flex-row sm:justify-end">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button
               variant="secondary"
-              onClick={copyLatexToClipboard}
-              disabled={justCopiedLatex}
+              onClick={copySvgToClipboard}
+              disabled={justCopiedSvg}
             >
-              {justCopiedLatex ? (
-                <Check className="mr-2 h-4 w-4" />
+              {justCopiedSvg ? (
+                <Check />
               ) : (
-                <ClipboardCopy className="mr-2 h-4 w-4" />
+                <ClipboardCopy />
               )}
-              {justCopiedLatex ? "Copied!" : "Copy LaTeX"}
+              {justCopiedSvg ? "Copied!" : "Copy as SVG"}
             </Button>
-            <Button onClick={copyImageToClipboard} disabled={isCopyingImage || justCopiedImage}>
+            <Button 
+              onClick={copyImageToClipboard} 
+              disabled={isCopyingImage || justCopiedImage}
+              variant="secondary"
+            >
               {isCopyingImage ? (
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
+                <div className="animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
               ) : justCopiedImage ? (
-                <Check className="mr-2 h-4 w-4" />
+                <Check />
               ) : (
-                <ImageIcon className="mr-2 h-4 w-4" />
+                <ImageIcon />
               )}
               {isCopyingImage ? "Copying..." : justCopiedImage ? "Copied!" : "Copy as PNG"}
+            </Button>
+            <Button onClick={() => downloadImage('svg')}>
+              <Download />
+              Download as SVG
+            </Button>
+            <Button onClick={() => downloadImage('png')}>
+              <FileImage />
+              Download as PNG
             </Button>
           </div>
         </CardFooter>
@@ -628,3 +677,5 @@ export function MathEquationEditor() {
     </TooltipProvider>
   );
 }
+
+    
